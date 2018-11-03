@@ -55,6 +55,12 @@ class CustomerEntity extends PersistentEntity {
           // Then once the event is successfully persisted, we respond with done.
           ctx.reply(Done)
         }
+    }.onEvent {
+      case (CustomerRenamed(newName), state) => {
+        val currentCustomer = state.get
+        val updatedCustomer = currentCustomer.copy(name = newName)
+        Some(updatedCustomer)
+      }
     }.orElse(getCustomerCommand)
 
   }

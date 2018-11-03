@@ -10,7 +10,7 @@ curl -X GET http://localhost:9000/api/customer/NZZ
 
 GetCustomers
 
-curl GET http://localhost:9000/api/customer
+curl -X GET http://localhost:9000/api/customer
 
 
 RenameCustomer

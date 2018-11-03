@@ -5,7 +5,7 @@ curl -H "Content-Type: application/json" -X POST -d '{"trigram": "NZZ", "name": 
 
 GetCustomer
 
-curl GET http://localhost:9000/api/customer/NZZ
+curl -X GET http://localhost:9000/api/customer/NZZ
 
 
 GetCustomers
@@ -16,3 +16,8 @@ curl GET http://localhost:9000/api/customer
 RenameCustomer
 
 curl -H "Content-Type: application/json" -X POST -d '{"name": "NZT"}' http://localhost:9000/api/customer/NZZ/rename
+
+
+CASSANDRA
+
+/opt/cassandra/bin/cqlsh localhost 4000

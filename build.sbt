@@ -1,4 +1,8 @@
+import sbt.Keys._
+import sbt.Project.projectToRef
+
 organization in ThisBuild := "com.nagravision"
+
 version in ThisBuild := "1.0-SNAPSHOT"
 
 // the Scala version that will be used for cross-compiled libraries
@@ -82,7 +86,7 @@ lazy val elideOptions = settingKey[Seq[String]]("Set limit for elidable function
 
 
 // instantiate the JS project for SBT with some additional settings
-lazy val client: Project = project("scalajs")
+lazy val client = (project in file("scalajs"))
   .settings(
     name := "client",
     version := Settings.version,
@@ -103,7 +107,7 @@ lazy val client: Project = project("scalajs")
     // use uTest framework for tests
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
-  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb, JSDependenciesPlugin)
   .dependsOn(sharedJS)
 
 // Client projects (just one in this case)
@@ -111,7 +115,7 @@ lazy val clients = Seq(client)
 
 
 // instantiate the JVM project for SBT with some additional settings
-lazy val server = project("server")
+lazy val server = (project in file("server"))
   .settings(
     name := "server",
     version := Settings.version,

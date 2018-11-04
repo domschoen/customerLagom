@@ -25,3 +25,17 @@ curl -H "Content-Type: application/json" -X POST -d '{"name": "NZT"}' http://loc
 CASSANDRA
 
 /opt/cassandra/bin/cqlsh localhost 4000
+
+
+
+Event stream
+
+https://github.com/lagom/lagom/issues/177
+
+
+Interesting
+https://medium.com/stashaway-engineering/event-sourcing-the-best-way-for-stashaway-7a2da36e6021
+
+https://doc.akka.io/docs/akka/current/persistence.html?language=scala
+
+https://github.com/akka/akka-persistence-cassandra

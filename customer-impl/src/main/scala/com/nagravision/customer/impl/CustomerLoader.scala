@@ -13,17 +13,17 @@ import com.softwaremill.macwire._
 class CustomerLoader extends LagomApplicationLoader {
 
   override def load(context: LagomApplicationContext): LagomApplication =
-    new HelloApplication(context) {
+    new CustomerApplication(context) {
       override def serviceLocator: ServiceLocator = NoServiceLocator
     }
 
   override def loadDevMode(context: LagomApplicationContext): LagomApplication =
-    new HelloApplication(context) with LagomDevModeComponents
+    new CustomerApplication(context) with LagomDevModeComponents
 
   override def describeService = Some(readDescriptor[CustomerService])
 }
 
-abstract class HelloApplication(context: LagomApplicationContext)
+abstract class CustomerApplication(context: LagomApplicationContext)
   extends LagomApplication(context)
     with CassandraPersistenceComponents
     with LagomKafkaComponents
@@ -31,10 +31,12 @@ abstract class HelloApplication(context: LagomApplicationContext)
 
   // Bind the service that this server provides
   override lazy val lagomServer = serverFor[CustomerService](wire[CustomerServiceImpl])
+  lazy val customerRepository = wire[CustomerRepository]
 
   // Register the JSON serializer registry
   override lazy val jsonSerializerRegistry = CustomerSerializerRegistry
 
   // Register the Hello persistent entity
   persistentEntityRegistry.register(wire[CustomerEntity])
+  readSide.register(wire[CustomerEventProcessor])
 }

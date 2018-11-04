@@ -21,7 +21,7 @@ import akka.stream.scaladsl.Sink
 /**
   * Implementation of the CustomerService.
   */
-class CustomerServiceImpl(registry: PersistentEntityRegistry, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
+class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
 
 
   private val currentIdsQuery = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
@@ -59,19 +59,10 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, system: ActorSyste
     }
   }
   override def getCustomers = ServiceCall { _ =>
-    // Note this should never make production.... Why ?
-
-    currentIdsQuery.currentPersistenceIds()
-      .filter(_.startsWith("CustomerEntity|"))
-      .mapAsync(4) { trigram =>
-        registry.refFor[CustomerEntity](trigram)
-          .ask(GetCustomer)
-          .map(_.map(customer => convertCustomer(customer)))
-      }.collect {
-      case Some(user) => user
-    }.runWith(Sink.seq)
-
+    customerRepository.getCustomers.map(customers => customers.map(convertCustomer))
   }
+
+
 
 
 

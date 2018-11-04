@@ -3,6 +3,10 @@ CreateCustomer
 curl -H "Content-Type: application/json" -X POST -d '{"trigram": "NZZ", "name": "New Zeland Zero Zillion", "customerType": "Operator", "dynamicsAccountID" : "DY-8322", "headCountry": "IT", "region": "EMEA"}' http://localhost:9000/api/customer
 
 
+curl -H "Content-Type: application/json" -X POST -d '{"trigram": "ABB", "name": "ABrownB", "customerType": "Operator", "dynamicsAccountID" : "DY-0001", "headCountry": "IT", "region": "EMEA"}' http://localhost:9000/api/customer
+
+
+
 GetCustomer
 
 curl -X GET http://localhost:9000/api/customer/NZZ

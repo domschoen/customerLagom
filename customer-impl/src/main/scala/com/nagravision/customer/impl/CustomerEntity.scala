@@ -39,6 +39,7 @@ class CustomerEntity extends PersistentEntity {
 
       }.onEvent {
         case (CustomerCreated(customer), state) => Some(customer)
+
       }.orElse(getCustomerCommand)
 
     }
@@ -91,6 +92,12 @@ case object GetCustomer extends CustomerCommand[Option[Customer]] {
 }
 
 
+case object GetCustomerEvents extends CustomerCommand[Option[Customer]] {
+  implicit val format: Format[GetCustomerEvents.type] = singletonFormat(GetCustomerEvents)
+}
+
+
+
 case class CreateCustomer(customer: Customer) extends CustomerCommand[Done]
 
 object CreateCustomer {
@@ -113,6 +120,7 @@ sealed trait CustomerEvent extends AggregateEvent[CustomerEvent] {
 object CustomerEvent {
   val NumShards = 1
   val Tag = AggregateEventTag.sharded[CustomerEvent](NumShards)
+  //val Tag = AggregateEventTag[CustomerEvent]
 }
 
 /**

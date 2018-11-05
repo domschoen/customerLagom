@@ -1,10 +1,12 @@
 package com.nagravision.customer.api
 
+import akka.stream.scaladsl.Source
 import akka.{Done, NotUsed}
 import com.lightbend.lagom.scaladsl.api.broker.Topic
 import com.lightbend.lagom.scaladsl.api.broker.kafka.{KafkaProperties, PartitionKeyStrategy}
 import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
 import play.api.libs.json.{Format, Json}
+import com.lightbend.lagom.scaladsl.api.Descriptor
 
 object CustomerService  {
   val TOPIC_NAME = "customer"
@@ -28,12 +30,11 @@ trait CustomerService extends Service {
   def renameCustomer(trigram: String): ServiceCall[CustomerNewName, Done]
 
 
-  /**
-    * Example: curl http://localhost:9000/api/hello/Alice
-    */
   def getCustomer(trigram: String): ServiceCall[NotUsed, Customer]
-
+  //def getCustomerEvents(trigram: String): ServiceCall[NotUsed,  Seq[CustomerEvent]]
   def getCustomers: ServiceCall[NotUsed, Seq[Customer]]
+
+  def getLiveCustomerEvents(trigram: String): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
 
 
   override final def descriptor = {
@@ -44,6 +45,7 @@ trait CustomerService extends Service {
         pathCall("/api/customer", createCustomer),
         pathCall("/api/customer/:trigram", getCustomer _),
         pathCall("/api/customer", getCustomers),
+        pathCall("/api/customer/live/:trigram", getLiveCustomerEvents _),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
       )
       .withAutoAcl(true)

@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.Done
 import com.datastax.driver.core._
-import com.nagravision.customer.api.Customer
 import com.nagravision.customer.api
 import com.lightbend.lagom.scaladsl.persistence.ReadSideProcessor
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
@@ -20,6 +19,8 @@ private[impl] class CustomerRepository(session: CassandraSession)(implicit ec: E
        rows => rows.map(convertRowToCustomer(_))
     }
   }
+
+
 
   private def convertRowToCustomer(row: Row): Customer = {
     Customer(

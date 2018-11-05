@@ -2,14 +2,14 @@ package controllers
 
 import java.nio.ByteBuffer
 
-import com.google.inject.Inject
+import javax.inject.Inject
 import play.api.{Configuration, Environment}
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class Application @Inject() (implicit val config: Configuration, env: Environment) extends Controller {
+class Application @Inject()(implicit val config: Configuration, env: Environment) extends Controller {
 
   def index = Action {
     Ok(views.html.index("Chirper"))

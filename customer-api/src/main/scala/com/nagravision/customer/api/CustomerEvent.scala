@@ -14,7 +14,7 @@ case class CustomerCreated(trigram: String, name: String, customerType: String, 
 case class CustomerRenamed(trigram: String, name: String) extends CustomerEvent
 
 
-object ItemEvent {
+object CustomerEvent {
   implicit val format: Format[CustomerEvent] =
     derived.flat.oformat((__ \ "type").format[String])
 }

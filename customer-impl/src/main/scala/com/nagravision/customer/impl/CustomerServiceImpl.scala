@@ -13,11 +13,12 @@ import com.lightbend.lagom.scaladsl.persistence.{EventStreamElement, PersistentE
 import com.lightbend.lagom.scaladsl.api.transport.{Forbidden, NotFound}
 import akka.{Done, NotUsed}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
-
+import akka.stream.scaladsl.Source
+import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
 /**
   * Implementation of the CustomerService.
   */
@@ -31,6 +32,35 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
     "NNN"
   }
 
+
+
+  /*def customerEventsTopic(): Topic[api.CustomerEvent] =
+    TopicProducer.singleStreamWithOffset {
+      fromOffset =>
+        registry.eventStream(CustomerEvent.Tag.allTags, fromOffset)
+          .map(ev => (convertEvent(ev), ev.offset))
+    }*/
+
+  def customerEventsTopic(): Topic[api.CustomerEvent] =
+    TopicProducer.taggedStreamWithOffset(CustomerEvent.Tag.allTags.toList) { (tag, offset) =>
+      registry.eventStream(tag, offset)
+        .filter {
+          _.event match {
+            case x@(_: CustomerCreated | _: CustomerRenamed ) => true
+            case _ => false
+          }
+        }.mapAsync(1)(convertEvent)
+    }
+
+  override def getLiveCustomerEvents(trigram: String): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]] = {
+    _ =>
+      Future {
+        customerEventsTopic()
+          .subscribe
+          .atMostOnceSource
+          .mapAsync(1)
+      }
+  }
 
   override def createCustomer = ServiceCall[api.Customer, Done] { customer => {
       val trigram = customer.trigram match {
@@ -63,8 +93,43 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
   }
 
 
+  private def convertEvent(customerEvent: EventStreamElement[CustomerEvent]): api.CustomerEvent = {
+    customerEvent.event match {
+      case CustomerCreated(customer) => api.CustomerCreated(customer.trigram,
+        customer.name,
+        customer.customerType,
+        customer.dynamicsAccountID,
+        customer.headCountry,
+        customer.region
+      )
+      case CustomerRenamed(newName) => api.CustomerRenamed(customerEvent.entityId, newName)
+    }
+  }
 
-
+  private def convertEvent(eventStreamElement: EventStreamElement[ItemEvent]): Future[(api.ItemEvent, Offset)] = {
+    eventStreamElement match {
+      case EventStreamElement(itemId, AuctionStarted(_), offset) =>
+        entityRefString(itemId).ask(GetItem).map {
+          case Some(item) =>
+            (api.AuctionStarted(
+              itemId = item.id,
+              creator = item.creator,
+              reservePrice = item.reservePrice,
+              increment = item.increment,
+              startDate = item.auctionStart.get,
+              endDate = item.auctionEnd.get
+            ), offset)
+        }
+      case EventStreamElement(itemId, AuctionFinished(winner, price), offset) =>
+        entityRefString(itemId).ask(GetItem).map {
+          case Some(item) =>
+            (api.AuctionFinished(
+              itemId = item.id,
+              item = convertItem(item)
+            ), offset)
+        }
+    }
+  }
 
   private def convertCustomer(customer: Customer): api.Customer = {
     api.Customer(Some(customer.trigram), customer.name, customer.customerType, customer.dynamicsAccountID, customer.headCountry, customer.region)

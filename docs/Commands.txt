@@ -4,12 +4,14 @@ curl -H "Content-Type: application/json" -X POST -d '{"trigram": "NZZ", "name": 
 
 
 curl -H "Content-Type: application/json" -X POST -d '{"trigram": "ABB", "name": "ABrownB", "customerType": "Operator", "dynamicsAccountID" : "DY-0001", "headCountry": "IT", "region": "EMEA"}' http://localhost:9000/api/customer
+curl -H "Content-Type: application/json" -X POST -d '{"trigram": "ABC", "name": "ABrownB", "customerType": "Operator", "dynamicsAccountID" : "DY-0001", "headCountry": "IT", "region": "EMEA"}' http://localhost:9000/api/customer
 
 
 
 GetCustomer
 
 curl -X GET http://localhost:9000/api/customer/NZZ
+curl -X GET http://localhost:9000/api/customer/ABB
 
 
 GetCustomers
@@ -20,6 +22,7 @@ curl -X GET http://localhost:9000/api/customer
 RenameCustomer
 
 curl -H "Content-Type: application/json" -X POST -d '{"name": "NZT"}' http://localhost:9000/api/customer/NZZ/rename
+curl -H "Content-Type: application/json" -X POST -d '{"name": "ABBA"}' http://localhost:9000/api/customer/ABB/rename
 
 
 CASSANDRA
@@ -31,6 +34,10 @@ CASSANDRA
 Event stream
 
 https://github.com/lagom/lagom/issues/177
+https://github.com/lagom/lagom-recipes/blob/master/consumer-service/consumer-service-java-sbt/hello-impl/src/main/java/com/lightbend/lagom/recipes/consumer/hello/impl/HelloServiceImpl.java
+https://blog.knoldus.com/message-broker-lagom-using-kafka/
+
+
 
 
 Interesting

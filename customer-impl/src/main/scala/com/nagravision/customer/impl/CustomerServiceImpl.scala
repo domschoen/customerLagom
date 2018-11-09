@@ -3,7 +3,7 @@ package com.nagravision.customer.impl
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.persistence.query.PersistenceQuery
+import akka.persistence.query.{Offset, PersistenceQuery}
 import com.nagravision.customer.api
 import com.nagravision.customer.api.CustomerService
 import com.lightbend.lagom.scaladsl.api.ServiceCall
@@ -15,9 +15,10 @@ import akka.{Done, NotUsed}
 
 import scala.concurrent.{ExecutionContext, Future}
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
+import akka.persistence.serialization.MessageSerializer
 import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.Source
+import akka.stream.javadsl.Keep
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
 /**
   * Implementation of the CustomerService.
@@ -41,7 +42,7 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
           .map(ev => (convertEvent(ev), ev.offset))
     }*/
 
-  def customerEventsTopic(): Topic[api.CustomerEvent] =
+  override def customerEventsTopic: Topic[api.CustomerEvent] =
     TopicProducer.taggedStreamWithOffset(CustomerEvent.Tag.allTags.toList) { (tag, offset) =>
       registry.eventStream(tag, offset)
         .filter {
@@ -52,15 +53,46 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
         }.mapAsync(1)(convertEvent)
     }
 
-  override def getLiveCustomerEvents(trigram: String): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]] = {
-    _ =>
-      Future {
-        customerEventsTopic()
+
+
+  // def sayHello: ServiceCall[Source[String, NotUsed], Source[String, NotUsed]]
+
+  //val dematerializingSink =
+
+  override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, _]] = ServiceCall { _ =>
+    // Source[CustomerEvent, _] does not conform to Source[CustomerEvent, NotUsed]
+    //Future.successful(customerEventsTopic.subscribe.atMostOnceSource.mapMaterializedValue(_ => NotUsed))
+
+    val source: Source[api.CustomerEvent, _] = customerEventsTopic.subscribe.atMostOnceSource
+    //val flow = Flow(source)
+    //val identity = Flow[api.CustomerEvent]
+    //val flow = source.viaMat(identity)
+    //val toto = Flow.fromSinkAndSource[Any, Int](Sink.ignore, flow)
+
+    //Future.successful(source.mapAsync(1)(x => Future(x))
+    //Future.successful(source.mapAsync(1)(x => Future(x))
+    Future(source)
+  }
+  /*override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, _]] = ServiceCall { _ =>
+    // Source[CustomerEvent, _] does not conform to Source[CustomerEvent, NotUsed]
+    //Future.successful(customerEventsTopic.subscribe.atMostOnceSource.mapMaterializedValue(_ => NotUsed))
+
+    //val source: Source[api.CustomerEvent, _] = customerEventsTopic.subscribe.atLeastOnce
+    //val flow = Flow(source)
+    val identity = Flow[api.CustomerEvent]
+    //val flow = source.viaMat(identity)
+    //val toto = Flow.fromSinkAndSource[Any, Int](Sink.ignore, flow)
+
+    //Future.successful(source.mapAsync(1)(x => Future(x))
+    Future(customerEventsTopic.subscribe.atMostOnceSource)
+  }*/
+
+  /*  ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]] { _ =>
+        Future (customerEventsTopic()
           .subscribe
           .atMostOnceSource
-          .mapAsync(1)
-      }
-  }
+        )
+  }*/
 
   override def createCustomer = ServiceCall[api.Customer, Done] { customer => {
       val trigram = customer.trigram match {
@@ -93,40 +125,23 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
   }
 
 
-  private def convertEvent(customerEvent: EventStreamElement[CustomerEvent]): api.CustomerEvent = {
-    customerEvent.event match {
-      case CustomerCreated(customer) => api.CustomerCreated(customer.trigram,
-        customer.name,
-        customer.customerType,
-        customer.dynamicsAccountID,
-        customer.headCountry,
-        customer.region
-      )
-      case CustomerRenamed(newName) => api.CustomerRenamed(customerEvent.entityId, newName)
-    }
-  }
 
-  private def convertEvent(eventStreamElement: EventStreamElement[ItemEvent]): Future[(api.ItemEvent, Offset)] = {
+  private def convertEvent(eventStreamElement: EventStreamElement[CustomerEvent]): Future[(api.CustomerEvent, Offset)] = {
     eventStreamElement match {
-      case EventStreamElement(itemId, AuctionStarted(_), offset) =>
-        entityRefString(itemId).ask(GetItem).map {
-          case Some(item) =>
-            (api.AuctionStarted(
-              itemId = item.id,
-              creator = item.creator,
-              reservePrice = item.reservePrice,
-              increment = item.increment,
-              startDate = item.auctionStart.get,
-              endDate = item.auctionEnd.get
-            ), offset)
+      case EventStreamElement(trigram, CustomerCreated(customer), offset) =>
+        Future.successful {
+          (api.CustomerCreated(customer.trigram,
+            customer.name,
+            customer.customerType,
+            customer.dynamicsAccountID,
+            customer.headCountry,
+            customer.region
+          ), offset)
         }
-      case EventStreamElement(itemId, AuctionFinished(winner, price), offset) =>
-        entityRefString(itemId).ask(GetItem).map {
-          case Some(item) =>
-            (api.AuctionFinished(
-              itemId = item.id,
-              item = convertItem(item)
-            ), offset)
+
+      case EventStreamElement(trigram, CustomerRenamed(newName), offset) =>
+        Future.successful {
+          (api.CustomerRenamed(trigram, newName), offset)
         }
     }
   }

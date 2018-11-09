@@ -30,6 +30,7 @@ lazy val `customer-api` = (project in file("customer-api"))
   .settings(
     libraryDependencies ++= Seq(
       lagomScaladslApi,
+      lagomScaladslKafkaBroker,
       playJsonDerivedCodecs
     )
   )

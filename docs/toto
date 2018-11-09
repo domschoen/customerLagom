@@ -1,0 +1,8 @@
+          MessageSerializer.jsValueFormatMessageSerializer(
+            implicitly[MessageSerializer[JsValue, ByteString]],
+            CustomerEvent.format
+          )
+ByteArraySerializer
+
+
+          MessageSerializer.sourceMessageSerializer(MessageSerializer.JsValueMessageSerializer)

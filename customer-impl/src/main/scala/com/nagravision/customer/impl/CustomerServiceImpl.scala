@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.persistence.query.{Offset, PersistenceQuery}
 import com.nagravision.customer.api
 import com.nagravision.customer.api.CustomerService
-import com.lightbend.lagom.scaladsl.api.ServiceCall
+import com.lightbend.lagom.scaladsl.api.{ServiceCall, ServiceLocator}
 import com.lightbend.lagom.scaladsl.api.broker.Topic
 import com.lightbend.lagom.scaladsl.broker.TopicProducer
 import com.lightbend.lagom.scaladsl.persistence.{EventStreamElement, PersistentEntityRegistry}
@@ -19,7 +19,9 @@ import akka.persistence.serialization.MessageSerializer
 import akka.stream.Materializer
 import akka.stream.javadsl.Keep
 import akka.stream.scaladsl.{Flow, Sink, Source}
+import com.lightbend.lagom.internal.broker.kafka.NoKafkaBrokersException
 import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
+import kafka.server.KafkaConfig
 /**
   * Implementation of the CustomerService.
   */
@@ -59,11 +61,11 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
 
   //val dematerializingSink =
 
-  override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, _]] = ServiceCall { _ =>
+  override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = ServiceCall { _ =>
     // Source[CustomerEvent, _] does not conform to Source[CustomerEvent, NotUsed]
     //Future.successful(customerEventsTopic.subscribe.atMostOnceSource.mapMaterializedValue(_ => NotUsed))
 
-    val source: Source[api.CustomerEvent, _] = customerEventsTopic.subscribe.atMostOnceSource
+    //val source: Source[api.CustomerEvent, _] = customerEventsTopic.subscribe
     //val flow = Flow(source)
     //val identity = Flow[api.CustomerEvent]
     //val flow = source.viaMat(identity)
@@ -71,8 +73,14 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
 
     //Future.successful(source.mapAsync(1)(x => Future(x))
     //Future.successful(source.mapAsync(1)(x => Future(x))
-    Future(source)
+    val source = customerEventsTopic.subscribe.atMostOnceSource
+    val newSource: Source[api.CustomerEvent, NotUsed] =  Source.fromGraph(source)
+      .mapMaterializedValue(ev => NotUsed.getInstance())
+    Future(newSource)
   }
+
+
+
   /*override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, _]] = ServiceCall { _ =>
     // Source[CustomerEvent, _] does not conform to Source[CustomerEvent, NotUsed]
     //Future.successful(customerEventsTopic.subscribe.atMostOnceSource.mapMaterializedValue(_ => NotUsed))

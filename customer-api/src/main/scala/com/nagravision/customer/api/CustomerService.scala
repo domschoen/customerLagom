@@ -39,7 +39,7 @@ trait CustomerService extends Service {
   //def getCustomerEvents(trigram: String): ServiceCall[NotUsed,  Seq[CustomerEvent]]
   def getCustomers: ServiceCall[NotUsed, Seq[Customer]]
 
-  def getLiveCustomerEvents: ServiceCall[NotUsed, Source[CustomerEvent, _]]
+  def getLiveCustomerEvents: ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
 
   def customerEventsTopic: Topic[CustomerEvent]
 
@@ -52,14 +52,14 @@ trait CustomerService extends Service {
         pathCall("/api/customer/:trigram", getCustomer _),
         pathCall("/api/customer", getCustomers),
         //pathCall("/api/customer/live/:trigram", getLiveCustomerEvents _),
-        pathCall("/api/customer/live", getLiveCustomerEvents)(
+        /*pathCall("/api/customer/live", getLiveCustomerEvents)(
           MessageSerializer.NotUsedMessageSerializer,
           //MessageSerializer.sourceMessageSerializer(implicitly[MessageSerializer[Source[CustomerEvent,_])
           //MessageSerializer.sourceMessageSerializer(implicitly[MessageSerializer[CustomerEvent, ByteString]]    ))
           streamMessageSerializer
-        ),
+        ),*/
 
-        //pathCall("/api/customer/live", getLiveCustomerEvents),
+        pathCall("/api/customer/live", getLiveCustomerEvents),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
       )
       .withTopics(
@@ -75,7 +75,7 @@ trait CustomerService extends Service {
   }
 
 
-  def streamMessageSerializer[CustomerEvent] = {
+ /* def streamMessageSerializer[CustomerEvent] = {
     new StreamedMessageSerializer[JsValue] {
 
       private class SourceSerializer(delegate: NegotiatedSerializer[JsValue, ByteString]) extends NegotiatedSerializer[Source[JsValue, Any], Source[ByteString, Any]] {
@@ -99,5 +99,5 @@ trait CustomerService extends Service {
       override def serializerForRequest: NegotiatedSerializer[Source[JsValue, Any], Source[ByteString, Any]] =
         new SourceSerializer(delegate.serializerForRequest)
     }
-  }
+  }*/
 }

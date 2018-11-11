@@ -39,6 +39,8 @@ https://blog.knoldus.com/message-broker-lagom-using-kafka/
 
 
 
+sbt new https://github.com/lagom/lagom-scala.g8
+
 
 Interesting
 https://medium.com/stashaway-engineering/event-sourcing-the-best-way-for-stashaway-7a2da36e6021

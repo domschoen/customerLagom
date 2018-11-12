@@ -1,6 +1,8 @@
 import sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 //import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import sbt.Keys._
+import sbt.Project.projectToRef
 
 /**
  * Application settings. Configure the build for your application here.
@@ -62,6 +64,7 @@ object Settings {
     //"org.webjars" % "normalize.css" % "2.1.3",
     "com.esotericsoftware.kryo" % "kryo" % "2.24.0",
     "com.lihaoyi" %% "utest" % versions.uTest % Test
+    
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

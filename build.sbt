@@ -123,7 +123,7 @@ lazy val server = (project in file("server"))
     routesGenerator := InjectedRoutesGenerator,
     scalaVersion := Settings.versions.scala,
     scalacOptions ++= Settings.scalacOptions,
-    libraryDependencies ++= Settings.jvmDependencies.value,
+    libraryDependencies ++= Seq(macwire) ++Settings.jvmDependencies.value,
     commands += ReleaseCmd,
     // triggers scalaJSPipeline when using compile or continuous compilation
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,

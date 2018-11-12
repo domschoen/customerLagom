@@ -1,6 +1,8 @@
-GET     /               controllers.Application.index
-GET     /signup         controllers.Application.index
-GET     /addFriend      controllers.Application.index
-GET     /users/:id      controllers.Application.userStream(id)
-GET     /assets/*file   controllers.Assets.versioned(path = "/public", file)
-GET     /cb             controllers.Application.circuitBreaker
+GET     /               controllers.ApplicationController.index
+GET     /signup         controllers.ApplicationController.index
+GET     /addFriend      controllers.ApplicationController.index
+GET     /users/:id      controllers.ApplicationController.userStream(id)
+GET     /cb             controllers.ApplicationController.circuitBreaker
+
+
+GET     /assets/*file   controllers.Assets.versioned(path="/public", file: Asset)

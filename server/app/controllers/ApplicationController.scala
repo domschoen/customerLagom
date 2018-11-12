@@ -1,18 +1,22 @@
 package controllers
 
-import java.nio.ByteBuffer
 
 import javax.inject.Inject
-import play.api.{Configuration, Environment}
 import play.api.mvc._
+import play.api.data.Form
+import play.api.data.Forms._
+import play.api.mvc.ControllerComponents
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 
-class Application @Inject()(implicit val config: Configuration, env: Environment) extends Controller {
+class ApplicationController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
-  def index = Action {
-    Ok(views.html.index("Chirper"))
+
+
+  def index = Action(parse.anyContent) {
+    implicit request =>
+      Ok(views.html.index("Chirper"))
   }
 
 

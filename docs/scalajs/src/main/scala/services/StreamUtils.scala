@@ -14,7 +14,7 @@ object StreamUtils {
   val baseWebsocketUrl = s"ws://${dom.document.location.host}"
 
 
-  case class Socket(url: String, userId: Option[String]) {
+  case class Socket(url: String) {
     private val socket: WebSocket = new dom.WebSocket(url = baseWebsocketUrl + url)
 
     def close() = {
@@ -23,13 +23,7 @@ object StreamUtils {
 
     def connect() {
       socket.onopen = (e: Event) => {
-        userId match {
-          case Some(uid) =>
-            val streamForUsers = StreamForUsers(List(uid))
-            val msg = write(streamForUsers)
-            socket.send(msg)
-          case None => ()
-        }
+        dom.console.log(s"Socket open ${e}")
       }
       socket.onclose = (e: CloseEvent) => {
         dom.console.log(s"Socket closed. Reason: ${e.reason} (${e.code})")
@@ -48,8 +42,8 @@ object StreamUtils {
 
 
 
-  def createUserStream(userId: String):Socket = {
-    val s = Socket("/api/chirps/live", Some(userId))
+  def createUserStream():Socket = {
+    val s = Socket("/api/customer/live")
     s.connect()
     s
   }

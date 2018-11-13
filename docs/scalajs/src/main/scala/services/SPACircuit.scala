@@ -179,7 +179,7 @@ class UsersHandler[M](modelRW: ModelRW[M, Map[String, User]]) extends ActionHand
 
     case StartStreamForUser(userId) =>
       println("UsersHandler | StartStreamForUser | " + userId)
-      StreamUtils.createUserStream(userId)
+      StreamUtils.createUserStream()
       noChange
 
 
@@ -207,7 +207,7 @@ class UsersHandler[M](modelRW: ModelRW[M, Map[String, User]]) extends ActionHand
 
     case StartStreamsForUsers(users: List[User]) =>
       users.map(u => {
-        StreamUtils.createUserStream(u.userId)
+        StreamUtils.createUserStream()
       })
       noChange
 

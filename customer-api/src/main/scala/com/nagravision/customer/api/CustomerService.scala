@@ -14,7 +14,7 @@ import com.lightbend.lagom.scaladsl.api.transport.MessageProtocol
 
 
 object CustomerService  {
-  val TOPIC_NAME = "customer"
+  val TOPIC_NAME = "customerTopic"
 }
 
 /**
@@ -46,18 +46,11 @@ trait CustomerService extends Service {
   override final def descriptor = {
     import Service._
     // @formatter:off
-    named("customer")
+    named("customer-serv")
       .withCalls(
         pathCall("/api/customer", createCustomer),
         pathCall("/api/customer/:trigram", getCustomer _),
-        pathCall("/api/customer", getCustomers),
-        //pathCall("/api/customer/live/:trigram", getLiveCustomerEvents _),
-        /*pathCall("/api/customer/live", getLiveCustomerEvents)(
-          MessageSerializer.NotUsedMessageSerializer,
-          //MessageSerializer.sourceMessageSerializer(implicitly[MessageSerializer[Source[CustomerEvent,_])
-          //MessageSerializer.sourceMessageSerializer(implicitly[MessageSerializer[CustomerEvent, ByteString]]    ))
-          streamMessageSerializer
-        ),*/
+        pathCall("/api/customer/all", getCustomers),
 
         pathCall("/api/customer/live", getLiveCustomerEvents),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
@@ -75,29 +68,4 @@ trait CustomerService extends Service {
   }
 
 
- /* def streamMessageSerializer[CustomerEvent] = {
-    new StreamedMessageSerializer[JsValue] {
-
-      private class SourceSerializer(delegate: NegotiatedSerializer[JsValue, ByteString]) extends NegotiatedSerializer[Source[JsValue, Any], Source[ByteString, Any]] {
-        override def protocol: MessageProtocol = delegate.protocol
-
-        override def serialize(messages: Source[JsValue, Any]) = messages.map(delegate.serialize)
-      }
-
-      private class SourceDeserializer(delegate: NegotiatedDeserializer[JsValue, ByteString]) extends NegotiatedDeserializer[Source[JsValue, Any], Source[ByteString, Any]] {
-        override def deserialize(wire: Source[ByteString, Any]) = wire.map(delegate.deserialize)
-      }
-
-      override def acceptResponseProtocols: immutable.Seq[MessageProtocol] = delegate.acceptResponseProtocols
-
-      override def deserializer(protocol: MessageProtocol): NegotiatedDeserializer[Source[JsValue, Any], Source[ByteString, Any]] =
-        new SourceDeserializer(delegate.deserializer(protocol))
-
-      override def serializerForResponse(acceptedMessageProtocols: immutable.Seq[MessageProtocol]): NegotiatedSerializer[Source[JsValue, Any], Source[ByteString, Any]] =
-        new SourceSerializer(delegate.serializerForResponse(acceptedMessageProtocols))
-
-      override def serializerForRequest: NegotiatedSerializer[Source[JsValue, Any], Source[ByteString, Any]] =
-        new SourceSerializer(delegate.serializerForRequest)
-    }
-  }*/
 }

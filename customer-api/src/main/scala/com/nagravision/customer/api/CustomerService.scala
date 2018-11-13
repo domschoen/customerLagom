@@ -50,7 +50,7 @@ trait CustomerService extends Service {
       .withCalls(
         pathCall("/api/customer", createCustomer),
         pathCall("/api/customer/:trigram", getCustomer _),
-        pathCall("/api/customer/all", getCustomers),
+        pathCall("/api/customer", getCustomers),
 
         pathCall("/api/customer/live", getLiveCustomerEvents),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)

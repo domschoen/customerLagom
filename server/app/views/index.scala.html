@@ -1,6 +1,5 @@
-@import helper._
-
 @(title: String)
+@import views.html.tags._
 
 
 <html lang="en">
@@ -18,7 +17,7 @@
         <div id="root">
         </div>
         @scalajs.html.scripts(
-            projectName = "client",
+            "client",
             name => routes.Assets.versioned(name).toString,
             name => getClass.getResource(s"/public/$name") != null)
     </body>

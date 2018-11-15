@@ -26,8 +26,8 @@ import kafka.server.KafkaConfig
 /**
   * Implementation of the CustomerService.
   */
-// customerService: CustomerService,
-class CustomerServiceImpl(registry: PersistentEntityRegistry,  customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
+//
+class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: CustomerService, customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
 
   private val currentIdsQuery = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
@@ -47,7 +47,7 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,  customerRepositor
 
   override def customerEventsTopic: Topic[api.CustomerEvent] =
     TopicProducer.taggedStreamWithOffset(CustomerEvent.Tag.allTags.toList) { (tag, offset) =>
-      registry.eventStream(tag, offset)
+      registry.eventStream(tag, Offset.noOffset)
         .filter {
           _.event match {
             case x@(_: CustomerCreated | _: CustomerRenamed ) => true
@@ -74,10 +74,10 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,  customerRepositor
 
     //Future.successful(source.mapAsync(1)(x => Future(x))
     //Future.successful(source.mapAsync(1)(x => Future(x))
-    val source = customerEventsTopic.subscribe.atMostOnceSource
+    val source = customerService.customerEventsTopic.subscribe.atMostOnceSource
     val newSource: Source[api.CustomerEvent, NotUsed] =  Source.fromGraph(source)
       .mapMaterializedValue(ev => NotUsed.getInstance())
-    Future.successful(newSource)
+    Future(newSource)
 
     //Future.successful(customerEventsTopic.subscribe.atLeastOnce(Flow[api.CustomerEvent].map {ev => ev}))
   }

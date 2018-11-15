@@ -32,7 +32,7 @@ abstract class CustomerApplication(context: LagomApplicationContext)
   // Bind the service that this server provides
   override lazy val lagomServer = serverFor[CustomerService](wire[CustomerServiceImpl])
   lazy val customerRepository = wire[CustomerRepository]
-  //lazy val customerService = serviceClient.implement[CustomerService]
+  lazy val customerService = serviceClient.implement[CustomerService]
 
   // Register the JSON serializer registry
   override lazy val jsonSerializerRegistry = CustomerSerializerRegistry

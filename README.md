@@ -3,8 +3,15 @@ Try out of Lagom Framework
 
 
 
+
+
 # Experience toward having Lagom 1.4.8 and Scala.js and Diode
 
+## publish event in ServiceCall
+
+https://stackoverflow.com/questions/50338216/lagom-publish-entity-events-as-source-for-websocket-connection
+
+## sbt
  - Using Lagom 1.0.0, sbt-less 1.1.0 is not found if ???
 ## build.sbt:17: error: value playJsonDerivedCodecs is not a member of sbt.ModuleID 
 
@@ -105,5 +112,53 @@ This works for me: Add to Application.conf:
 play.filters.headers.contentSecurityPolicy = null
   
 ## lagom.discovery.ServiceLocatorServer [] - Ambiguous route resolution serving route
+those 2 are overlapping:
   
+/api/customer/:trigram  
+/api/customer/live
+
+=> changed to /api/customerEventStream
+
+## Websocket handler failed with Peer closed connection with code 1011 '{"name":"Error message truncated","detail":""}'
+akka.http.scaladsl.model.ws.PeerClosedConnectionException: Peer closed connection with code 1011 '{"name":"Error message truncated","detail":""}'  
+
+Due to (3)
+
+## (3) Topic#subscribe is not permitted in the service's topic implementation
+
+see https://groups.google.com/forum/#!msg/lagom-framework/K59onuKGYkw/zZiZkTVgAAAJ
+(solved)
+
+## Lagom Consumer interrupted with WakeupException after timeout. Message: null
+
+In Chrome: Socket closed. Reason: internal error (1011)
+Seems like it is this problem:
+https://github.com/lagom/lagom-java-chirper-example/issues/108
+
+## only the latest event are send
+
+change this line to set noOffset
+      registry.eventStream(tag, Offset.noOffset)
+
+
+
+## Use PubSub instead of kafka topic to avoid timout and stop of the service
+
+like suggested by:
+https://groups.google.com/forum/#!msg/lagom-framework/K59onuKGYkw/zZiZkTVgAAAJ
+
+
+## Takes 10 second from new event to be visible in websocket
+
+https://github.com/akka/alpakka-kafka/issues/235
+
+Possibly due to: Current value of akka.kafka.consumer.wakeup-timeout is 3000 milliseconds
+
+set fetch min bytes to 0 and increase your poll interval
+=> not able to
+
+Seems intricically low but also possible to be reduced
+https://discuss.lightbend.com/t/best-practices-for-server-front-end-notifications/610
+
+
 

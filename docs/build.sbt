@@ -1,4 +1,9 @@
 import sbt.Keys._
+//import sbt._
+//import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+//import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType, _}
+//import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
+//import webscalajs.ScalaJSWeb
 import sbt.Project.projectToRef
 
 organization in ThisBuild := "com.nagravision"
@@ -26,6 +31,7 @@ lazy val security = (project in file("security"))
     )
   )
 
+
 lazy val `customer-api` = (project in file("customer-api"))
   .settings(
     libraryDependencies ++= Seq(
@@ -49,7 +55,6 @@ lazy val `customer-impl` = (project in file("customer-impl"))
   )
   .settings(lagomForkedTestSettings: _*)
   .dependsOn(`customer-api`)
-
 
 
 // a special crossProject for configuring a JS/JVM/shared structure
@@ -80,7 +85,7 @@ lazy val client = (project in file("scalajs"))
     // by default we do development build, no eliding
     elideOptions := Seq(),
     scalacOptions ++= elideOptions.value,
-    jsDependencies ++= Settings.jsDependencies.value,
+    libraryDependencies ++= Seq( Settings.WebJars.react, Settings.WebJars.react, Settings.WebJars.log4javascript),
     // RuntimeDOM is needed for tests
     //jsDependencies += RuntimeDOM % "test",
     // yes, we want to package JS dependencies

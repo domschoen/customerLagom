@@ -21,12 +21,13 @@ import akka.stream.javadsl.Keep
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.lightbend.lagom.internal.broker.kafka.NoKafkaBrokersException
 import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
+import javax.inject.Inject
 import kafka.server.KafkaConfig
 /**
   * Implementation of the CustomerService.
   */
-class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
-
+// customerService: CustomerService,
+class CustomerServiceImpl(registry: PersistentEntityRegistry,  customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
 
   private val currentIdsQuery = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
@@ -76,7 +77,9 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerRepository
     val source = customerEventsTopic.subscribe.atMostOnceSource
     val newSource: Source[api.CustomerEvent, NotUsed] =  Source.fromGraph(source)
       .mapMaterializedValue(ev => NotUsed.getInstance())
-    Future(newSource)
+    Future.successful(newSource)
+
+    //Future.successful(customerEventsTopic.subscribe.atLeastOnce(Flow[api.CustomerEvent].map {ev => ev}))
   }
 
 

@@ -52,16 +52,8 @@ trait CustomerService extends Service {
         pathCall("/api/customer/:trigram", getCustomer _),
         pathCall("/api/customer", getCustomers),
 
-        pathCall("/api/customer/live", getLiveCustomerEvents),
+        pathCall("/api/customerEventStream", getLiveCustomerEvents),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
-      )
-      .withTopics(
-        topic(CustomerService.TOPIC_NAME, customerEventsTopic)
-          .addProperty(
-            KafkaProperties.partitionKeyStrategy,
-            PartitionKeyStrategy[CustomerEvent](_.trigram)
-          )
-
       )
       .withAutoAcl(true)
     // @formatter:on

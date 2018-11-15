@@ -7,14 +7,19 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
-import components.{AddFriendPage, AppPage, SignUpPage}
+import components.AppPage
 import com.zoepepper.facades.jsjoda._
-import services.{MegaContent, SPACircuit, UseLocalStorageUser}
+import services.{InitApp, MegaContent, SPACircuit, UseLocalStorageUser}
 import diode.Action
 import diode.react.ModelProxy
+import components.AppPage
+import japgolly.scalajs.react.extra.router.{Redirect, RouterConfigDsl}
+import org.scalajs.dom
+
+import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("Main")
-object Main extends js.JSApp {
+object Main {
 
   sealed trait Loc
   case object LoginLoc extends Loc
@@ -33,53 +38,15 @@ object Main extends js.JSApp {
 
     (emptyRule
       | staticRoute(root, LoginLoc) ~> renderR(ctl => contentWrapper(AppPage(ctl, _, None, false)))
-      | staticRoute("#signup", SignupLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => SignUpPage(ctl,proxy)))
-      | staticRoute("#addFriend", AddFriendLoc) ~> renderR(ctl => SPACircuit.wrap(_.content)(proxy => AppPage(ctl, proxy, None, true)))
-      | dynamicRouteCT("#users" / string(".*").caseClass[UserChirpLoc]) ~> dynRenderR(
-        (m, ctl) => {
-          wrapper(p => AppPage(ctl, p, Some(m.userId), false))
-        })
-    ).notFound(redirectToPage(LoginLoc)(Redirect.Replace))
+      ).notFound(redirectToPage(LoginLoc)(Redirect.Replace))
 
   }
 
-
-  def layout(c: RouterCtl[Loc], r: Resolution[Loc]) = {
-    <.div(^.id := "clipped",
-      <.div(^.id := "site-header",
-        <.div(^.className := "row",
-          <.div(^.className := "small-3 columns",c.link(LoginLoc)("Chirper", ^.id := "logo")),
-          <.div(^.className := "small-9 columns",
-            <.nav(
-              <.div(^.className := "tertiary-nav",
-                <.div(^.className := "tertiary-nav")
-              ),
-              <.div(^.className := "primary-nav",
-                //Button(Button.Props(proxy.dispatchCB(UpdateMotd()), CommonStyle.danger), Icon.refresh, " Login")
-                "ButtonLogin"
-              )
-            )
-          )
-        )
-      ),
-      <.div(^.className := "container", r.render())
-    )
-  }
-
-  @JSExport
-  def main(): Unit = {
-    println("Welcome to your Play application's JavaScript!");
-    val someInstant = Instant.ofEpochMilli(1540222606472d)
-    val someDate = LocalDateTime.ofInstant(someInstant, ZoneId.of("GMT+2"));
-    println("someInstant" + someDate.toString)
-
-    //SPACircuit.dispatch(UseLocalStorageUser)
-
-
+  def main(args: Array[String]): Unit = {
     val router = Router(BaseUrl.until_#, routerConfig)
+
+    SPACircuit.dispatch(InitApp)
 
     router().renderIntoDOM(dom.document.getElementById("root"))
   }
-
-
 }

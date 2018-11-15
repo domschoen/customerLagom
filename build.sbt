@@ -1,18 +1,22 @@
+import sbtcrossproject.{crossProject, CrossType}
 import sbt.Keys._
 import sbt.Project.projectToRef
 
+
 organization in ThisBuild := "com.nagravision"
+
 version in ThisBuild := "1.0-SNAPSHOT"
 
 // the Scala version that will be used for cross-compiled libraries
 scalaVersion in ThisBuild := "2.11.12"
+
 
 val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
 val macwire = "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % Test
 
 lazy val `customer` = (project in file("."))
-  .aggregate(`customer-api`, `customer-impl`)
+  .aggregate(`customer-api`, `customer-impl`, `server`)
 
 
 lazy val security = (project in file("security"))
@@ -51,87 +55,81 @@ lazy val `customer-impl` = (project in file("customer-impl"))
   .dependsOn(`customer-api`)
 
 
-// a special crossProject for configuring a JS/JVM/shared structure
-lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
-  .settings(
-    scalaVersion := Settings.versions.scala,
-    libraryDependencies ++= Settings.sharedDependencies.value
+
+lazy val server = (project in file("server")).settings(commonSettings).settings(
+  scalaJSProjects := Seq(client),
+  routesGenerator := InjectedRoutesGenerator,
+  pipelineStages in Assets := Seq(scalaJSPipeline),
+  pipelineStages := Seq(digest, gzip),
+  // triggers scalaJSPipeline when using compile or continuous compilation
+  compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+  libraryDependencies ++= Seq(
+    "com.vmunier" %% "scalajs-scripts" % "1.1.2",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % Test,
+    "org.webjars" % "font-awesome" % "4.3.0-1" % Provided,
+    "org.webjars" % "bootstrap" % "3.3.6" % Provided,
+    "com.esotericsoftware.kryo" % "kryo" % "2.24.0",
+    "com.lihaoyi" %% "utest" % "0.4.7" % Test,
+    lagomScaladslServer,
+    macwire,
+    guice,
+    specs2 % Test
+  ),
+  // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
+  EclipseKeys.preTasks := Seq(compile in Compile)
+).enablePlugins(PlayScala, LagomPlay).
+  dependsOn(sharedJvm)
+
+
+
+lazy val client = (project in file("scalajs")).settings(commonSettings).settings(
+  name := "client",
+  scalaJSUseMainModuleInitializer := true,
+  scalacOptions ++= Seq(
+    "-Xlint",
+    "-unchecked",
+    "-deprecation",
+    "-feature"
+  ),
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.1.0",
+    "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
+    "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
+    "com.typesafe.play" %%% "play-json" % "2.6.10",
+    "io.suzaku" %%% "diode" % "1.1.3",
+    "io.suzaku" %%% "diode-react" % "1.1.3",
+    "com.zoepepper" %%% "scalajs-jsjoda" % "1.1.1",
+    "com.lihaoyi" %%% "utest" % "0.4.7" % Test
+  ),
+  jsDependencies ++= Seq(
+    "org.webjars.bower" % "react" % "15.6.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+    "org.webjars.bower" % "react" % "15.6.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
+    "org.webjars" % "jquery" % "1.11.1" / "jquery.js" minified "jquery.min.js",
+    "org.webjars" % "bootstrap" % "3.3.6" / "bootstrap.js" minified "bootstrap.min.js" dependsOn "jquery.js",
+    "org.webjars" % "log4javascript" % "1.4.10" / "js/log4javascript_uncompressed.js" minified "js/log4javascript.js",
+    "org.webjars.npm" % "js-joda" % "1.1.8" / "dist/js-joda.js" minified "dist/js-joda.min.js"
   )
-  // set up settings specific to the JS project
-  .jsConfigure(_ enablePlugins ScalaJSWeb)
-
-lazy val sharedJVM = shared.jvm.settings(name := "sharedJVM")
-
-lazy val sharedJS = shared.js.settings(name := "sharedJS")
-
-// use eliding to drop some debug code in the production build
-lazy val elideOptions = settingKey[Seq[String]]("Set limit for elidable functions")
+).enablePlugins(ScalaJSPlugin, ScalaJSWeb).
+  dependsOn(sharedJs)
 
 
-// instantiate the JS project for SBT with some additional settings
-lazy val client = (project in file("scalajs"))
-  .settings(
-    name := "client",
-    version := Settings.version,
-    scalaVersion := Settings.versions.scala,
-    scalacOptions ++= Settings.scalacOptions,
-    libraryDependencies ++= Settings.scalajsDependencies.value,
-    // by default we do development build, no eliding
-    elideOptions := Seq(),
-    scalacOptions ++= elideOptions.value,
-    jsDependencies ++= Settings.jsDependencies.value,
-    // RuntimeDOM is needed for tests
-    //jsDependencies += RuntimeDOM % "test",
-    // yes, we want to package JS dependencies
-    skip in packageJSDependencies := false,
-    // use Scala.js provided launcher code to start the client app
-    scalaJSUseMainModuleInitializer := true,
-    scalaJSUseMainModuleInitializer in Test := false,
-    // use uTest framework for tests
-    testFrameworks += new TestFramework("utest.runner.Framework")
+lazy val shared = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("shared"))
+  .settings(commonSettings).settings(
+      libraryDependencies ++= Seq(
+          "com.lihaoyi" %% "upickle" % "0.6.6"
+      )
   )
-  .enablePlugins(ScalaJSPlugin, ScalaJSWeb, JSDependenciesPlugin)
-  .dependsOn(sharedJS)
+  
+  
+lazy val sharedJvm = shared.jvm
+lazy val sharedJs = shared.js
 
-// Client projects (just one in this case)
-lazy val clients = Seq(client)
+lazy val commonSettings = Seq(
+  scalaVersion := "2.11.11"
+)
 
-
-// instantiate the JVM project for SBT with some additional settings
-lazy val server = (project in file("server"))
-  .settings(
-    name := "server",
-    version := Settings.version,
-    routesGenerator := InjectedRoutesGenerator,
-    scalaVersion := Settings.versions.scala,
-    scalacOptions ++= Settings.scalacOptions,
-    libraryDependencies ++= Seq(macwire, guice) ++Settings.jvmDependencies.value,
-    commands += ReleaseCmd,
-    // triggers scalaJSPipeline when using compile or continuous compilation
-    compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
-    // connect to the client project
-    scalaJSProjects := clients,
-    pipelineStages in Assets := Seq(scalaJSPipeline),
-    pipelineStages := Seq(digest, gzip)
-  )
-  .enablePlugins(PlayScala, LagomPlay)
-  .aggregate(clients.map(projectToRef): _*)
-  .dependsOn(sharedJVM)
-
-// Command for building a release
-lazy val ReleaseCmd = Command.command("release") {
-  state => "set elideOptions in client := Seq(\"-Xelide-below\", \"WARNING\")" ::
-    "client/clean" ::
-    "client/test" ::
-    "server/clean" ::
-    "server/test" ::
-    "server/dist" ::
-    "set elideOptions in client := Seq()" ::
-    state
-}
-
-// lazy val root = (project in file(".")).aggregate(client, server)
-
-// loads the Play server project at sbt startup
-onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
-
+// loads the server project at sbt startup
+onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s}

@@ -1,8 +1,10 @@
-GET     /               controllers.ApplicationController.index
-GET     /signup         controllers.ApplicationController.index
-GET     /addFriend      controllers.ApplicationController.index
-GET     /users/:id      controllers.ApplicationController.userStream(id)
-GET     /cb             controllers.ApplicationController.circuitBreaker
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
 
+# Home page
+GET        /                             com.example.playscalajs.controllers.Main.index
 
-GET     /assets/*file   controllers.Assets.versioned(path="/public", file: Asset)
+# Prefix must match `play.assets.urlPrefix`
+GET        /assets/*file                 controllers.Assets.at(file)
+GET        /versionedAssets/*file        controllers.Assets.versioned(path="/public", file: Asset)

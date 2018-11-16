@@ -146,6 +146,16 @@ https://github.com/lagom/lagom-java-chirper-example/issues/108
 change this line to set noOffset
       registry.eventStream(tag, Offset.noOffset)
 
+=> try solution: https://stackoverflow.com/questions/48759468/can-lagom-1-4-forward-websocket-error-messages
+
+but now: lagom netty failed: Error during WebSocket handshake: Unexpected response code: 500
+ => see (4)
+ 
+ 
+## (4) Error during WebSocket handshake: Unexpected response code: 500
+
+ 
+
 
 
 ## Use PubSub instead of kafka topic to avoid timout and stop of the service
@@ -165,6 +175,6 @@ set fetch min bytes to 0 and increase your poll interval
 
 Seems intricically low but also possible to be reduced
 https://discuss.lightbend.com/t/best-practices-for-server-front-end-notifications/610
-
+Solved with same post answer to my question. I was  able to pass from 10s to 0.1s !!
 
 

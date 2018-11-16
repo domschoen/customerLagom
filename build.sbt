@@ -5,10 +5,16 @@ import sbt.Project.projectToRef
 
 organization in ThisBuild := "com.nagravision"
 
+// Implementation of the service gateway: "akka-http" (default) or "netty" 
+//lagomServiceGatewayImpl in ThisBuild := "netty"
+
+
+
 version in ThisBuild := "1.0-SNAPSHOT"
 
 // the Scala version that will be used for cross-compiled libraries
-scalaVersion in ThisBuild := "2.11.12"
+// scalaVersion in ThisBuild := "2.11.12"
+scalaVersion in ThisBuild := "2.12.6"
 
 
 val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
@@ -137,6 +143,6 @@ lazy val commonSettings = Seq(
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s}
 
 
-lagomCassandraCleanOnStart in ThisBuild := true
+lagomCassandraCleanOnStart in ThisBuild := false
 
 

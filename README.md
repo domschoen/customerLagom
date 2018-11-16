@@ -33,6 +33,12 @@ After some time this message appears
 
 => change scala version from 2.11.11 to 2.11.12
 
+Still existing when running on another machine...
+
+Found a interesting post: https://stackoverflow.com/questions/42675442/lagoms-embedded-kafka-fails-to-start-after-killing-lagom-process-once
+
+
+
 ## use scala comment in index.scala.html does not work
 
 ==> this looks better : <!ÐÐ and the comment closes with ÐÐ> but if variable inside -> does not work

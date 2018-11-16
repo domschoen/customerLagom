@@ -122,6 +122,8 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
           "com.lihaoyi" %% "upickle" % "0.6.6"
       )
   )
+
+
   
   
 lazy val sharedJvm = shared.jvm
@@ -133,3 +135,8 @@ lazy val commonSettings = Seq(
 
 // loads the server project at sbt startup
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s}
+
+
+lagomCassandraCleanOnStart in ThisBuild := true
+
+

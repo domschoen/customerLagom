@@ -4,7 +4,7 @@ import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.softwaremill.macwire._
 //import com.lightbend.rp.servicediscovery.lagom.scaladsl.LagomServiceLocatorComponents
 import controllers.{Assets, AssetsComponents}
-import com.nagravision.controllers.Main
+import controllers.Main
 import play.api.ApplicationLoader.Context
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.mvc.EssentialFilter

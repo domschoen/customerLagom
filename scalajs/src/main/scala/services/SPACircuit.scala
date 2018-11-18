@@ -10,15 +10,14 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scalajs.dom
 
 import scala.concurrent.Future
-import client.{Customer, CustomerEvent, CustomerRenamed, CustomerCreated}
+import client.{Customer, CustomerEventType, CustomerEvent}
+import client.CustomerEvent.{CustomerRenamed, CustomerCreated}
 
 // Actions
 case object UseLocalStorageUser extends Action
 case class LoginWithID(userId: String) extends Action
 case class RegisterCustomers(customers: Option[List[Customer]]) extends Action
 case object InitApp extends Action
-case class CustomerRenamedReceived(customerRenamed: CustomerRenamed) extends Action
-case class CustomerCreatedReceived(customerCreated: CustomerCreated) extends Action
 
 case object Logout extends Action
 case object FetchCustomers extends Action
@@ -67,10 +66,22 @@ class AllCustomersHandler[M](modelRW: ModelRW[M, Option[List[Customer]]]) extend
 
 class CustomerEventHandler[M](modelRW: ModelRW[M, List[CustomerEvent]]) extends ActionHandler(modelRW) {
   override def handle = {
-    case CustomerCreatedReceived (event) =>
-      updated(event :: value)
-    case CustomerRenamedReceived (event) =>
-      updated(event :: value)
+    case CustomerCreated(
+      trigram: String,
+      name: String,
+      customerType: String,
+      dynamicsAccountID: String,
+      headCountry: String,
+      region: String,
+      event_type: String
+    ) =>
+      updated(CustomerCreated(trigram, name,customerType,dynamicsAccountID,headCountry,region,event_type) :: value)
+    case CustomerRenamed (
+      trigram: String,
+      name: String,
+      event_type: String
+    ) =>
+      updated(CustomerRenamed(trigram,name,event_type) :: value)
   }
 }
 

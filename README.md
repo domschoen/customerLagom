@@ -195,7 +195,6 @@ set fetch min bytes to 0 and increase your poll interval
 
 Seems intricically low but also possible to be reduced
 
-?????
 https://discuss.lightbend.com/t/best-practices-for-server-front-end-notifications/610
 Solved with same post answer to my question. I was  able to pass from 10s to 0.1s !!
 
@@ -210,4 +209,19 @@ An incompatibility between Play 1.6 and upickle
  - remove the shared project
  - add "com.lihaoyi" %%% "upickle" % "0.6.6" to client project (was in shared before)
 
+## upickle and sealed trait
 
+When using sealed trait:
+
+Uncaught $c_ju_NoSuchElementException {s$1: "None.get", e$1: null, stackTrace$1: null, stackdata: $c_ju_NoSuchElementException, stack: "Error↵    at $c_ju_NoSuchElementException.fillInSt…:9000/versionedAssets/client-fastopt.js:14200:17)"}
+(anonymous) @ Parser.scala:352
+(anonymous) @ SyncParser.scala:23
+(anonymous) @ StringParser.scala:28
+(anonymous) @ StringParser.scala:27
+$s_Lupickle_Api$class__read__Lupickle_Api__Lujson_Transformable__Lupickle_core_Types$BaseReader__O @ Transformable.scala:13
+(anonymous) @ Api.scala:66
+
+=> the extra case class attribute "$type" was missing
+
+## topic all messages only at startup
+ 

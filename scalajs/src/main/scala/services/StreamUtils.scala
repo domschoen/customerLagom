@@ -14,7 +14,8 @@ import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 import upickle.default.write
 import upickle.default._
 import upickle.default.{macroRW, ReadWriter => RW}
-import client.{CustomerEvent, CustomerCreated, CustomerRenamed,CustomerEventType}
+import client.{Customer, CustomerEventType, CustomerEvent}
+import client.CustomerEvent.{CustomerRenamed, CustomerCreated}
 import diode.Action
 import diode.react.ModelProxy
 
@@ -42,16 +43,19 @@ object StreamUtils {
       }
       socket.onmessage = (e: MessageEvent) => {
         println("e.data " + e.data.toString)
-        val eventType = read[CustomerEventType](e.data.toString);
-        println("Socket received event " + eventType)
-        val action : Action = eventType.event_type match {
-          case "customerCreated" =>
-            val customerEvent = read[CustomerCreated](e.data.toString)
-            CustomerCreatedReceived(customerEvent)
-          case "customerRenamed" =>
-            val customerEvent = read[CustomerRenamed](e.data.toString)
-            CustomerRenamedReceived(customerEvent)
+
+        val eventType = read[CustomerEventType](e.data.toString)
+        val sealedClass = eventType.event_type match {
+          case "customerCreated" => "client.CustomerEvent.CustomerCreated"
+          case "customerRenamed" => "client.CustomerEvent.CustomerRenamed"
         }
+        val sealedType = """"$type":"""" + sealedClass + """","""
+        val stringReceived = "{" +sealedType +  e.data.toString.substring(1)
+
+        println("Socket received completed " + stringReceived)
+        val action = read[CustomerEvent](stringReceived)
+        println("Socket received event " + action)
+
         SPACircuit.dispatch(action)
       }
     }

@@ -22,7 +22,7 @@ object Customer{
 }
 
 
-/*sealed trait CustomerEvent
+sealed trait CustomerEvent extends Action
 object CustomerEvent {
   import upickle.default._
 
@@ -48,7 +48,7 @@ object CustomerEvent {
                                event_type: String
                              ) extends CustomerEvent
 
-}*/
+}
 
 
 case class CustomerEventType(event_type: String)
@@ -56,12 +56,12 @@ object CustomerEventType{
   implicit def rw: RW[CustomerEventType] = macroRW
 }
 
-sealed trait CustomerEvent
+//sealed trait CustomerEvent
 
 
 // {"trigram":"ABC","name":"New Zeland Zero Zillion","customerType":"Operator","dynamicsAccountID":"DY-8322",
 // "headCountry":"IT","region":"EMEA","event_type":"customerCreated"}
-case class CustomerCreated (
+/*case class CustomerCreated (
                              trigram: String,
                              name: String,
                              customerType: String,
@@ -69,7 +69,7 @@ case class CustomerCreated (
                              headCountry: String,
                              region: String,
                              event_type: String
-                           ) extends CustomerEvent
+                           )
 object CustomerCreated{
   implicit def rw: RW[CustomerCreated] = macroRW
 }
@@ -78,7 +78,7 @@ case class CustomerRenamed (
                              trigram: String,
                              name: String,
                              event_type: String
-                           ) extends CustomerEvent
+                           )
 object CustomerRenamed{
   implicit def rw: RW[CustomerRenamed] = macroRW
-}
+}*/

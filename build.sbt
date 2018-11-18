@@ -94,6 +94,7 @@ lazy val server = (project in file("server")).settings(commonSettings).settings(
     "org.webjars" % "bootstrap" % "3.3.6" % Provided,
     "com.esotericsoftware.kryo" % "kryo" % "2.24.0",
     "com.lihaoyi" %% "utest" % "0.4.7" % Test,
+    //"io.suzaku" %% "diode" % "1.1.4",
     macwire
   ),
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
@@ -113,20 +114,22 @@ lazy val client = (project in file("scalajs")).settings(commonSettings).settings
     "-feature"
   ),
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.5",
-    "com.github.japgolly.scalajs-react" %%% "core" % "1.1.0",
-    "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.6",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.3.1",
+    "com.github.japgolly.scalajs-react" %%% "extra" % "1.3.1",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
     //"com.typesafe.play" %%% "play-json" % "2.6.10",
-    "io.suzaku" %%% "diode" % "1.1.3",
-    "io.suzaku" %%% "diode-react" % "1.1.3",
+    "io.suzaku" %%% "diode" % "1.1.4",
+    "io.suzaku" %%% "diode-react" % "1.1.4.131",
     "com.zoepepper" %%% "scalajs-jsjoda" % "1.1.1",
-    "com.lihaoyi" %%% "utest" % "0.4.7" % Test,
-    "com.lihaoyi" %%% "upickle" % "0.6.6"
+    "com.lihaoyi" %%% "utest" % "0.6.5" % Test,
+    "com.lihaoyi" %%% "upickle" % "0.7.1"
   ),
+  dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
   jsDependencies ++= Seq(
-    "org.webjars.bower" % "react" % "15.6.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
-    "org.webjars.bower" % "react" % "15.6.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
+    "org.webjars.npm" % "react" % "16.5.1" / "umd/react.development.js" minified "umd/react.production.min.js" commonJSName "React",
+    "org.webjars.npm" % "react-dom" % "16.5.1" / "umd/react-dom.development.js" minified "umd/react-dom.production.min.js" dependsOn "umd/react.development.js" commonJSName "ReactDOM",
+    "org.webjars.npm" % "react-dom" % "16.5.1" / "umd/react-dom-server.browser.development.js" minified  "umd/react-dom-server.browser.production.min.js" dependsOn "umd/react-dom.development.js" commonJSName "ReactDOMServer",
     "org.webjars" % "jquery" % "1.11.1" / "jquery.js" minified "jquery.min.js",
     "org.webjars" % "bootstrap" % "3.3.6" / "bootstrap.js" minified "bootstrap.min.js" dependsOn "jquery.js",
     "org.webjars" % "log4javascript" % "1.4.10" / "js/log4javascript_uncompressed.js" minified "js/log4javascript.js",
@@ -142,18 +145,18 @@ lazy val client = (project in file("scalajs")).settings(commonSettings).settings
     .settings(commonSettings)
   .settings(
       libraryDependencies ++= Seq(
-          "com.lihaoyi" %% "upickle" % "0.6.6"
+          "com.lihaoyi" %% "upickle" % "0.7.1"
       )
-  )
-*/
+  )*/
+
 
   
-  
+ 
 //lazy val sharedJvm = shared.jvm
 //lazy val sharedJs = shared.js
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.11.11"
+  scalaVersion := "2.12.6"
 )
 
 // loads the server project at sbt startup

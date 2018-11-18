@@ -225,3 +225,17 @@ $s_Lupickle_Api$class__read__Lupickle_Api__Lujson_Transformable__Lupickle_core_T
 
 ## topic all messages only at startup
  
+## Diode upgraded to 1.1.4, scala.js 0.6.22 and scalajs-react 1.3.1 and react 1.16.5
+
+=> error org.webjars.npm#js-tokens;[3.0.0,4),[4.0.0,5): not found
+=> Use dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2"
+=> problem with upickle link proble still here 
+=> not possible to have cross project... let's see
+=> remove shared project
+=> still link error
+=> for diode-react, in the documentation is is not 1.1.4 but 1.1.4.131 !!
+=> and, and and ... it works !!!! (but for cross project it's still a No)
+
+
+
+

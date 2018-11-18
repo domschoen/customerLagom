@@ -23,6 +23,7 @@ RenameCustomer
 
 curl -H "Content-Type: application/json" -X POST -d '{"name": "NZT"}' http://localhost:9000/api/customer/NZZ/rename
 curl -H "Content-Type: application/json" -X POST -d '{"name": "ABBA"}' http://localhost:9000/api/customer/ABB/rename
+curl -H "Content-Type: application/json" -X POST -d '{"name": "ABBA"}' http://localhost:9000/api/customer/ABC/rename
 
 
 CASSANDRA

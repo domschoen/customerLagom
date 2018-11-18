@@ -41,7 +41,7 @@ trait CustomerService extends Service {
 
   def getLiveCustomerEvents: ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
 
-  def customerEventsTopic: Topic[CustomerEvent]
+  def customerEventsTopic(): Topic[CustomerEvent]
 
   override final def descriptor = {
     import Service._
@@ -57,11 +57,10 @@ trait CustomerService extends Service {
       )
       .withTopics(
         topic(CustomerService.TOPIC_NAME, customerEventsTopic)
-          .addProperty(
-            KafkaProperties.partitionKeyStrategy,
-            PartitionKeyStrategy[CustomerEvent](_.trigram)
-          )
-
+           .addProperty(
+                  KafkaProperties.partitionKeyStrategy,
+                  PartitionKeyStrategy[CustomerEvent](_.trigram)
+           )
       )
       .withAutoAcl(true)
     // @formatter:on

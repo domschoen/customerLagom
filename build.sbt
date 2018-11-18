@@ -13,7 +13,7 @@ organization in ThisBuild := "com.nagravision"
 version in ThisBuild := "1.0-SNAPSHOT"
 
 // the Scala version that will be used for cross-compiled libraries
-// scalaVersion in ThisBuild := "2.11.12"
+//scalaVersion in ThisBuild := "2.11.12"
 scalaVersion in ThisBuild := "2.12.6"
 
 
@@ -22,7 +22,7 @@ val macwire = "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % Test
 
 lazy val `customer` = (project in file("."))
-  .aggregate(`customer-api`, `customer-impl`, `server`)
+  .aggregate(`customer-api`, `customer-impl`, `server`, `customer-stream-api`, `customer-stream-impl`)
 
 
 lazy val security = (project in file("security"))
@@ -60,6 +60,25 @@ lazy val `customer-impl` = (project in file("customer-impl"))
   .settings(lagomForkedTestSettings: _*)
   .dependsOn(`customer-api`)
 
+lazy val `customer-stream-api` = (project in file("customer-stream-api"))
+  .settings(
+    libraryDependencies ++= Seq(
+      lagomScaladslKafkaBroker,
+      lagomScaladslApi
+    )
+  )
+
+lazy val `customer-stream-impl` = (project in file("customer-stream-impl"))
+  .enablePlugins(LagomScala)
+  .settings(
+    libraryDependencies ++= Seq(
+      lagomScaladslTestKit,
+      lagomScaladslKafkaBroker,
+      macwire,
+      scalaTest
+    )
+  )
+  .dependsOn(`customer-stream-api`, `customer-api`)
 
 
 lazy val server = (project in file("server")).settings(commonSettings).settings(
@@ -71,20 +90,16 @@ lazy val server = (project in file("server")).settings(commonSettings).settings(
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   libraryDependencies ++= Seq(
     "com.vmunier" %% "scalajs-scripts" % "1.1.2",
-    "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % Test,
     "org.webjars" % "font-awesome" % "4.3.0-1" % Provided,
     "org.webjars" % "bootstrap" % "3.3.6" % Provided,
     "com.esotericsoftware.kryo" % "kryo" % "2.24.0",
     "com.lihaoyi" %% "utest" % "0.4.7" % Test,
-    lagomScaladslServer,
-    macwire,
-    guice,
-    specs2 % Test
+    macwire
   ),
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   EclipseKeys.preTasks := Seq(compile in Compile)
-).enablePlugins(PlayScala, LagomPlay).
-  dependsOn(sharedJvm)
+).enablePlugins(PlayScala, LagomPlay)
+//  .dependsOn(sharedJvm)
 
 
 
@@ -102,11 +117,12 @@ lazy val client = (project in file("scalajs")).settings(commonSettings).settings
     "com.github.japgolly.scalajs-react" %%% "core" % "1.1.0",
     "com.github.japgolly.scalajs-react" %%% "extra" % "1.1.0",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
-    "com.typesafe.play" %%% "play-json" % "2.6.10",
+    //"com.typesafe.play" %%% "play-json" % "2.6.10",
     "io.suzaku" %%% "diode" % "1.1.3",
     "io.suzaku" %%% "diode-react" % "1.1.3",
     "com.zoepepper" %%% "scalajs-jsjoda" % "1.1.1",
-    "com.lihaoyi" %%% "utest" % "0.4.7" % Test
+    "com.lihaoyi" %%% "utest" % "0.4.7" % Test,
+    "com.lihaoyi" %%% "upickle" % "0.6.6"
   ),
   jsDependencies ++= Seq(
     "org.webjars.bower" % "react" % "15.6.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
@@ -116,24 +132,25 @@ lazy val client = (project in file("scalajs")).settings(commonSettings).settings
     "org.webjars" % "log4javascript" % "1.4.10" / "js/log4javascript_uncompressed.js" minified "js/log4javascript.js",
     "org.webjars.npm" % "js-joda" % "1.1.8" / "dist/js-joda.js" minified "dist/js-joda.min.js"
   )
-).enablePlugins(ScalaJSPlugin, ScalaJSWeb).
-  dependsOn(sharedJs)
+).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+//  .dependsOn(sharedJs)
 
 
-lazy val shared = crossProject(JSPlatform, JVMPlatform)
+/*lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("shared"))
-  .settings(commonSettings).settings(
+    .settings(commonSettings)
+  .settings(
       libraryDependencies ++= Seq(
           "com.lihaoyi" %% "upickle" % "0.6.6"
       )
   )
-
+*/
 
   
   
-lazy val sharedJvm = shared.jvm
-lazy val sharedJs = shared.js
+//lazy val sharedJvm = shared.jvm
+//lazy val sharedJs = shared.js
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.11.11"

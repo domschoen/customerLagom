@@ -1,7 +1,6 @@
-package com.example.playscalajs.controllers
+package com.nagravision.controllers
 
 import javax.inject._
-import com.example.playscalajs.shared.SharedMessages
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext

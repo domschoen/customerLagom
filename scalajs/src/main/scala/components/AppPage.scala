@@ -19,8 +19,7 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import diode.Action
 import diode.react.ModelProxy
-import services.MegaContent
-import services.UseLocalStorageUser
+import services.{FetchCustomers, MegaContent, UseLocalStorageUser}
 import client.Main.Loc
 
 // Translation of App
@@ -38,15 +37,47 @@ object AppPage {
 
     def mounted(p: Props): japgolly.scalajs.react.Callback = {
       println("AppPage | mounted")
-      p.proxy.dispatchCB(UseLocalStorageUser)
+      p.proxy.dispatchCB(FetchCustomers)
     }
 
 
 
 
-    def render(props: Props): VdomElement = {
+    def render(p: Props): VdomElement = {
       println("render | AppPage")
-      <.div(^.className :="loading", <.h1("Super Cool"))
+      val allCustomersFetched = p.proxy.value.allCustomers.isDefined
+      <.div(^.className :="loading",
+        <.h1("Customer Repo"),
+        <.h2("Customers:"),
+        p.proxy.value.allCustomers match {
+          case Some(customers) =>
+            <.table(
+              <.tbody(
+                customers toTagMod (
+                  customer => {
+                    <.tr(
+                      <.td(customer.trigram),<.td(customer.name)
+                    )
+                  }
+                )
+              )
+            )
+        case None => <.div("No customers")
+      },
+      <.h2("Action Events:"),
+      <.table(
+        <.tbody(
+          p.proxy.value.customerEvents toTagMod (
+            customerEvent => {
+              <.tr(
+                <.td(customerEvent.toString)
+              )
+            }
+            )
+        )
+      )
+
+      )
     }
   }
   // create the React component for Dashboard

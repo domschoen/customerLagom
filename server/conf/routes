@@ -3,7 +3,7 @@
 # ~~~~
 
 # Home page
-GET        /                             com.example.playscalajs.controllers.Main.index
+GET        /                             com.nagravision.controllers.Main.index
 
 # Prefix must match `play.assets.urlPrefix`
 GET        /assets/*file                 controllers.Assets.at(file)

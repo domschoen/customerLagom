@@ -37,15 +37,18 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: C
   }
 
 
-
-  /*def customerEventsTopic(): Topic[api.CustomerEvent] =
+  // With not shard seems to not be ok with Cassandra ????
+/*  override def customerEventsTopic(): Topic[api.CustomerEvent] = {
     TopicProducer.singleStreamWithOffset {
-      fromOffset =>
-        registry.eventStream(CustomerEvent.Tag.allTags, fromOffset)
-          .map(ev => (convertEvent(ev), ev.offset))
-    }*/
+      offset =>
+        registry.eventStream(CustomerEvent.Tag, offset)
+          .map(ev => (convertToApiCustomerEvent(ev), offset))
 
-  override def customerEventsTopic: Topic[api.CustomerEvent] =
+    }
+  }*/
+
+
+  override def customerEventsTopic(): Topic[api.CustomerEvent] =
     TopicProducer.taggedStreamWithOffset(CustomerEvent.Tag.allTags.toList) { (tag, offset) =>
       registry.eventStream(tag, Offset.noOffset)
         .filter {
@@ -53,57 +56,22 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: C
             case x@(_: CustomerCreated | _: CustomerRenamed ) => true
             case _ => false
           }
-        }.mapAsync(1)(convertEvent)
+        }.mapAsync(2)(convertEvent)
     }
 
 
 
-  // def sayHello: ServiceCall[Source[String, NotUsed], Source[String, NotUsed]]
-
-  //val dematerializingSink =
 
   override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = ServiceCall { _ =>
-    // Source[CustomerEvent, _] does not conform to Source[CustomerEvent, NotUsed]
-    //Future.successful(customerEventsTopic.subscribe.atMostOnceSource.mapMaterializedValue(_ => NotUsed))
-
-    //val source: Source[api.CustomerEvent, _] = customerEventsTopic.subscribe
-    //val flow = Flow(source)
-    //val identity = Flow[api.CustomerEvent]
-    //val flow = source.viaMat(identity)
-    //val toto = Flow.fromSinkAndSource[Any, Int](Sink.ignore, flow)
-
-    //Future.successful(source.mapAsync(1)(x => Future(x))
-    //Future.successful(source.mapAsync(1)(x => Future(x))
     val source = customerService.customerEventsTopic.subscribe.atMostOnceSource
     val newSource: Source[api.CustomerEvent, NotUsed] =  Source.fromGraph(source)
       .mapMaterializedValue(ev => NotUsed.getInstance())
-    Future(newSource)
-
-    //Future.successful(customerEventsTopic.subscribe.atLeastOnce(Flow[api.CustomerEvent].map {ev => ev}))
+    Future.successful(newSource)
   }
 
 
 
-  /*override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, _]] = ServiceCall { _ =>
-    // Source[CustomerEvent, _] does not conform to Source[CustomerEvent, NotUsed]
-    //Future.successful(customerEventsTopic.subscribe.atMostOnceSource.mapMaterializedValue(_ => NotUsed))
 
-    //val source: Source[api.CustomerEvent, _] = customerEventsTopic.subscribe.atLeastOnce
-    //val flow = Flow(source)
-    val identity = Flow[api.CustomerEvent]
-    //val flow = source.viaMat(identity)
-    //val toto = Flow.fromSinkAndSource[Any, Int](Sink.ignore, flow)
-
-    //Future.successful(source.mapAsync(1)(x => Future(x))
-    Future(customerEventsTopic.subscribe.atMostOnceSource)
-  }*/
-
-  /*  ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]] { _ =>
-        Future (customerEventsTopic()
-          .subscribe
-          .atMostOnceSource
-        )
-  }*/
 
   override def createCustomer = ServiceCall[api.Customer, Done] { customer => {
       val trigram = customer.trigram match {
@@ -135,6 +103,23 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: C
     customerRepository.getCustomers.map(customers => customers.map(convertCustomer))
   }
 
+  private def convertToApiCustomerEvent(eventStreamElement: EventStreamElement[CustomerEvent]): api.CustomerEvent = {
+    eventStreamElement match {
+      case EventStreamElement(trigram, CustomerCreated(customer), offset) =>
+        api.CustomerCreated(customer.trigram,
+            customer.name,
+            customer.customerType,
+            customer.dynamicsAccountID,
+            customer.headCountry,
+            customer.region
+          )
+
+
+      case EventStreamElement(trigram, CustomerRenamed(newName), offset) =>
+        api.CustomerRenamed(trigram, newName)
+
+    }
+  }
 
 
   private def convertEvent(eventStreamElement: EventStreamElement[CustomerEvent]): Future[(api.CustomerEvent, Offset)] = {

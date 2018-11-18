@@ -48,3 +48,9 @@ https://medium.com/stashaway-engineering/event-sourcing-the-best-way-for-stashaw
 https://doc.akka.io/docs/akka/current/persistence.html?language=scala
 
 https://github.com/akka/akka-persistence-cassandra
+
+
+
+get a githup repo at commit
+
+https://github.com/domschoen/customerLagom.git

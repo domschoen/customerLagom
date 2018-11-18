@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.Done
 import com.datastax.driver.core._
 import com.nagravision.customer.api
-import com.lightbend.lagom.scaladsl.persistence.ReadSideProcessor
+import com.lightbend.lagom.scaladsl.persistence.{AggregateEventTag, ReadSideProcessor}
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,6 +49,12 @@ private[impl] class CustomerEventProcessor(session: CassandraSession, readSide: 
   }
 
   def aggregateTags = CustomerEvent.Tag.allTags
+
+
+  // With no shard ??? how to implement it ?????
+  //def aggregateTags: Set[AggregateEventTag[CustomerEvent]] = ???
+
+
 
   private def createTables() = {
     for {

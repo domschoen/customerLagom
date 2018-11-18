@@ -55,6 +55,9 @@ https://github.com/KyleU/boilerplay
 In Play doc (https://www.playframework.com/documentation/2.6.x/Highlights26), we have a section: Scala.js support explaining that it is supported and how to
 => add this to scalajsDependencies (let's see)
     "com.typesafe.play" %%% "play-json" % "2.6.10",
+=> No this is not the reason
+=> What is really needed is a change of the version of com.vmunier scalajs-scripts from 1.0.0 to 1.1.2
+SOLVED
 
 ### vmunier sbt-web-scalajs
 com.vmunier
@@ -141,6 +144,21 @@ In Chrome: Socket closed. Reason: internal error (1011)
 Seems like it is this problem:
 https://github.com/lagom/lagom-java-chirper-example/issues/108
 
+
+????
+post a comment on:
+https://github.com/lagom/lagom/issues/1221
+
+let's see
+
+Possible references:
+https://grokbase.com/t/gg/akka-user/154r8bw5nz/streams-shutting-down-a-flow-exposing-a-materialized-value
+
+
+May be it is normal !!! and we only need to reconnect in case of error:
+https://github.com/lagom/lagom/issues/1284
+
+
 ## only the latest event are send
 
 change this line to set noOffset
@@ -154,6 +172,8 @@ but now: lagom netty failed: Error during WebSocket handshake: Unexpected respon
  
 ## (4) Error during WebSocket handshake: Unexpected response code: 500
 
+=> no idea 
+=> revert back to akka http
  
 
 
@@ -174,7 +194,20 @@ set fetch min bytes to 0 and increase your poll interval
 => not able to
 
 Seems intricically low but also possible to be reduced
+
+?????
 https://discuss.lightbend.com/t/best-practices-for-server-front-end-notifications/610
 Solved with same post answer to my question. I was  able to pass from 10s to 0.1s !!
+
+## Why Kafka ?
+
+https://stackoverflow.com/questions/51647937/communication-between-2-lagom-service-running-on-two-different-servers-machines
+
+## org.scalajs.core.tools.linker.LinkingException: There were linking errors
+
+An incompatibility between Play 1.6 and upickle
+=> 
+ - remove the shared project
+ - add "com.lihaoyi" %%% "upickle" % "0.6.6" to client project (was in shared before)
 
 

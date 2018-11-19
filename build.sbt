@@ -95,12 +95,13 @@ lazy val server = (project in file("server")).settings(commonSettings).settings(
     "com.esotericsoftware.kryo" % "kryo" % "2.24.0",
     "com.lihaoyi" %% "utest" % "0.4.7" % Test,
     //"io.suzaku" %% "diode" % "1.1.4",
+    "com.lihaoyi" %% "upickle" % "0.7.1",
     macwire
   ),
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   EclipseKeys.preTasks := Seq(compile in Compile)
 ).enablePlugins(PlayScala, LagomPlay)
-//  .dependsOn(sharedJvm)
+  .dependsOn(sharedJvm)
 
 
 
@@ -136,14 +137,15 @@ lazy val client = (project in file("scalajs")).settings(commonSettings).settings
     "org.webjars.npm" % "js-joda" % "1.1.8" / "dist/js-joda.js" minified "dist/js-joda.min.js"
   )
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
-//  .dependsOn(sharedJs)
+  .dependsOn(sharedJs)
 
 
-/*lazy val shared = crossProject(JSPlatform, JVMPlatform)
+lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("shared"))
     .settings(commonSettings)
-  .settings(
+    
+/*  .settings(
       libraryDependencies ++= Seq(
           "com.lihaoyi" %% "upickle" % "0.7.1"
       )
@@ -152,8 +154,8 @@ lazy val client = (project in file("scalajs")).settings(commonSettings).settings
 
   
  
-//lazy val sharedJvm = shared.jvm
-//lazy val sharedJs = shared.js
+lazy val sharedJvm = shared.jvm
+lazy val sharedJs = shared.js
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.6"

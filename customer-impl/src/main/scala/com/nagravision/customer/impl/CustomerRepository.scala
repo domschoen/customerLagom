@@ -7,6 +7,7 @@ import com.datastax.driver.core._
 import com.nagravision.customer.api
 import com.lightbend.lagom.scaladsl.persistence.{AggregateEventTag, ReadSideProcessor}
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
+import com.lightbend.lagom.scaladsl.pubsub.{PubSubRegistry, TopicId}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +35,7 @@ private[impl] class CustomerRepository(session: CassandraSession)(implicit ec: E
   }
 }
 
-private[impl] class CustomerEventProcessor(session: CassandraSession, readSide: CassandraReadSide)(implicit ec: ExecutionContext)
+private[impl] class CustomerEventProcessor(session: CassandraSession, pubSub: PubSubRegistry, readSide: CassandraReadSide)(implicit ec: ExecutionContext)
   extends ReadSideProcessor[CustomerEvent] {
   private var insertCustomerStatement: PreparedStatement = null
   private var renameCustomerStatement: PreparedStatement = null
@@ -43,8 +44,12 @@ private[impl] class CustomerEventProcessor(session: CassandraSession, readSide: 
     readSide.builder[CustomerEvent]("customerEventOffset")
       .setGlobalPrepare(createTables)
       .setPrepare(_ => prepareStatements())
-      .setEventHandler[CustomerCreated](e => insertCustomer(e.event.customer))
-      .setEventHandler[CustomerRenamed](e => renameCustomer(e.entityId, e.event.name))
+      .setEventHandler[CustomerCreated](e => {
+        insertCustomer(e.event.customer)
+    })
+      .setEventHandler[CustomerRenamed](e => {
+      renameCustomer(e.entityId, e.event.name)
+    })
       .build
   }
 

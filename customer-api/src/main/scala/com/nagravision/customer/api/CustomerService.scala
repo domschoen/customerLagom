@@ -11,11 +11,19 @@ import com.lightbend.lagom.scaladsl.api.Descriptor
 import com.lightbend.lagom.scaladsl.api.deser.MessageSerializer.{NegotiatedDeserializer, NegotiatedSerializer}
 import com.lightbend.lagom.scaladsl.api.deser.{MessageSerializer, StreamedMessageSerializer}
 import com.lightbend.lagom.scaladsl.api.transport.MessageProtocol
+import java.util.UUID
+
+import akka.NotUsed
+import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
+import play.api.libs.json.{Format, Json}
+import com.nagravision.customer.utils.JsonFormats._
 
 
 object CustomerService  {
   val TOPIC_NAME = "customerTopic"
 }
+
+
 
 /**
   * The Customer service interface.
@@ -39,7 +47,8 @@ trait CustomerService extends Service {
   //def getCustomerEvents(trigram: String): ServiceCall[NotUsed,  Seq[CustomerEvent]]
   def getCustomers: ServiceCall[NotUsed, Seq[Customer]]
 
-  def getLiveCustomerEvents: ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
+  def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
+  def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[CustomerEvent, NotUsed]]
 
   def customerEventsTopic(): Topic[CustomerEvent]
 
@@ -52,7 +61,8 @@ trait CustomerService extends Service {
         pathCall("/api/customer/:trigram", getCustomer _),
         pathCall("/api/customer", getCustomers),
 
-        pathCall("/api/customerEventStream", getLiveCustomerEvents),
+        pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
+        pathCall("/api/customerEventStream/customer", getLiveCustomerEvents _),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
       )
       .withTopics(
@@ -66,5 +76,12 @@ trait CustomerService extends Service {
     // @formatter:on
   }
 
-
 }
+
+case class LiveCustomerEventsRequest(trigram: String)
+
+
+object LiveCustomerEventsRequest {
+  implicit val format: Format[LiveCustomerEventsRequest] = Json.format
+}
+

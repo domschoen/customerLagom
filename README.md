@@ -133,12 +133,12 @@ akka.http.scaladsl.model.ws.PeerClosedConnectionException: Peer closed connectio
 
 Due to (3)
 
-## (3) Topic#subscribe is not permitted in the service's topic implementation
+## (3) Topic#subscribe is not permitted in the service's topic implementation [SOLVED]
 
 see https://groups.google.com/forum/#!msg/lagom-framework/K59onuKGYkw/zZiZkTVgAAAJ
 (solved)
 
-## Lagom Consumer interrupted with WakeupException after timeout. Message: null
+## Lagom Consumer interrupted with WakeupException after timeout. Message: null 
 
 In Chrome: Socket closed. Reason: internal error (1011)
 Seems like it is this problem:
@@ -170,7 +170,7 @@ but now: lagom netty failed: Error during WebSocket handshake: Unexpected respon
  => see (4)
  
  
-## (4) Error during WebSocket handshake: Unexpected response code: 500
+## (4) Error during WebSocket handshake: Unexpected response code: 500 [SOLVED]
 
 => no idea 
 => revert back to akka http
@@ -184,7 +184,7 @@ like suggested by:
 https://groups.google.com/forum/#!msg/lagom-framework/K59onuKGYkw/zZiZkTVgAAAJ
 
 
-## Takes 10 second from new event to be visible in websocket
+## Takes 10 second from new event to be visible in websocket [SOLVED]
 
 https://github.com/akka/alpakka-kafka/issues/235
 
@@ -202,12 +202,14 @@ Solved with same post answer to my question. I was  able to pass from 10s to 0.1
 
 https://stackoverflow.com/questions/51647937/communication-between-2-lagom-service-running-on-two-different-servers-machines
 
-## org.scalajs.core.tools.linker.LinkingException: There were linking errors
+## org.scalajs.core.tools.linker.LinkingException: There were linking errors [SOLVED]
 
 An incompatibility between Play 1.6 and upickle
 => 
  - remove the shared project
  - add "com.lihaoyi" %%% "upickle" % "0.6.6" to client project (was in shared before)
+=> upickle should be set in server + client and no more only in the shared 
+ 
 
 ## upickle and sealed trait
 
@@ -237,5 +239,8 @@ $s_Lupickle_Api$class__read__Lupickle_Api__Lujson_Transformable__Lupickle_core_T
 => and, and and ... it works !!!! (but for cross project it's still a No)
 
 
+## look's promising
+
+https://stackoverflow.com/questions/44893153/lagom-pubsubref-subscriber-drops-messages
 
 

@@ -53,6 +53,7 @@ lazy val `customer-impl` = (project in file("customer-impl"))
       lagomScaladslPersistenceCassandra,
       lagomScaladslKafkaBroker,
       lagomScaladslTestKit,
+      lagomScaladslPubSub,
       macwire,
       scalaTest
     )

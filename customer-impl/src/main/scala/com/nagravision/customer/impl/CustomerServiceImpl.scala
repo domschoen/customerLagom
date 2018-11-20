@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.persistence.query.{Offset, PersistenceQuery}
 import com.nagravision.customer.api
-import com.nagravision.customer.api.CustomerService
+import com.nagravision.customer.api.{CustomerService, LiveCustomerEventsRequest}
 import com.lightbend.lagom.scaladsl.api.{ServiceCall, ServiceLocator}
 import com.lightbend.lagom.scaladsl.api.broker.Topic
 import com.lightbend.lagom.scaladsl.broker.TopicProducer
@@ -20,14 +20,18 @@ import akka.stream.Materializer
 import akka.stream.javadsl.Keep
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.lightbend.lagom.internal.broker.kafka.NoKafkaBrokersException
-import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
+//import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
 import javax.inject.Inject
 import kafka.server.KafkaConfig
+import com.lightbend.lagom.scaladsl.pubsub.PubSubRegistry
+import com.lightbend.lagom.scaladsl.pubsub.TopicId
+
 /**
   * Implementation of the CustomerService.
   */
 //
-class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: CustomerService, customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
+class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRegistry,
+                          customerService: CustomerService, customerRepository: CustomerRepository, system: ActorSystem) (implicit ec: ExecutionContext, mat: Materializer) extends CustomerService {
 
   private val currentIdsQuery = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
@@ -62,16 +66,26 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: C
 
 
 
-  override def getLiveCustomerEvents: ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = ServiceCall { _ =>
+  /*override def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = ServiceCall { _ =>
     val source = customerService.customerEventsTopic.subscribe.atMostOnceSource
     val newSource: Source[api.CustomerEvent, NotUsed] =  Source.fromGraph(source)
       .mapMaterializedValue(ev => NotUsed.getInstance())
     Future.successful(newSource)
+  }*/
+
+  override def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
+      val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
+      Future.successful(topic.subscriber)
+    }
   }
 
 
 
-
+  override def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = { _ => {
+      val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
+      Future.successful(topic.subscriber)
+    }
+  }
 
   override def createCustomer = ServiceCall[api.Customer, Done] { customer => {
       val trigram = customer.trigram match {
@@ -82,14 +96,28 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry, customerService: C
 
       println("c " + c)
       // Ask the entity the Hello command.
-      entityRef(trigram).ask(CreateCustomer(c))
+      val reply = entityRef(trigram).ask(CreateCustomer(c))
+      reply.map(ack => {
+        val topic = pubSub.refFor(TopicId[api.CustomerCreated])
+        topic.publish(api.CustomerCreated(trigram, customer.name, customer.customerType, customer.dynamicsAccountID, customer.headCountry, customer.region))
+        Done
+      })
+
     }
   }
 
 
   override def renameCustomer(trigram: String) = ServiceCall { request =>
     val ref = entityRef(trigram)
-    ref.ask(RenameCustomer(request.name))
+
+
+    val reply = ref.ask(RenameCustomer(request.name))
+    reply.map(ack => {
+      val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
+      topic.publish(api.CustomerRenamed(trigram, request.name))
+      Done
+    })
+
   }
 
 

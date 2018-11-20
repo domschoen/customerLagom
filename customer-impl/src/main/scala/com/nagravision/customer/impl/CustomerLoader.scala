@@ -9,6 +9,7 @@ import play.api.libs.ws.ahc.AhcWSComponents
 import com.nagravision.customer.api.CustomerService
 import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
 import com.softwaremill.macwire._
+import com.lightbend.lagom.scaladsl.pubsub.PubSubComponents
 
 class CustomerLoader extends LagomApplicationLoader {
 
@@ -27,6 +28,7 @@ abstract class CustomerApplication(context: LagomApplicationContext)
   extends LagomApplication(context)
     with CassandraPersistenceComponents
     with LagomKafkaComponents
+    with PubSubComponents
     with AhcWSComponents {
 
   // Bind the service that this server provides

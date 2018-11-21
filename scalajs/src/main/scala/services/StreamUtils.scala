@@ -36,11 +36,15 @@ object StreamUtils {
       }
       socket.onclose = (e: CloseEvent) => {
         dom.console.log(s"Socket closed. Reason: ${e.reason} (${e.code})")
-        StreamUtils.createStream()
+        //StreamUtils.createStream()
       }
       socket.onerror = (e: Event) => {
         dom.console.log(s"Socket error! ${e}")
       }
+      /*socket.onmessage = (e: MessageEvent) => {
+        println("e.data " + e.data.toString)
+      }*/
+
       socket.onmessage = (e: MessageEvent) => {
         println("e.data " + e.data.toString)
 

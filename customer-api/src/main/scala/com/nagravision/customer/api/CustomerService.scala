@@ -14,6 +14,7 @@ import com.lightbend.lagom.scaladsl.api.transport.MessageProtocol
 import java.util.UUID
 
 import akka.NotUsed
+import akka.persistence.query.EventEnvelope
 import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
 import play.api.libs.json.{Format, Json}
 import com.nagravision.customer.utils.JsonFormats._
@@ -49,6 +50,8 @@ trait CustomerService extends Service {
 
   def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
   def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[CustomerEvent, NotUsed]]
+  //def currentPersistenceIds(): ServiceCall[NotUsed, Source[String, NotUsed]]
+  def currentPersistenceIds(): ServiceCall[NotUsed, Source[String, NotUsed]]
 
   def customerEventsTopic(): Topic[CustomerEvent]
 
@@ -61,7 +64,8 @@ trait CustomerService extends Service {
         pathCall("/api/customer/:trigram", getCustomer _),
         pathCall("/api/customer", getCustomers),
 
-        pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
+        //pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
+        pathCall("/api/customerEventStream", currentPersistenceIds),
         pathCall("/api/customerEventStream/customer", getLiveCustomerEvents _),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
       )

@@ -243,4 +243,5 @@ $s_Lupickle_Api$class__read__Lupickle_Api__Lujson_Transformable__Lupickle_core_T
 
 https://stackoverflow.com/questions/44893153/lagom-pubsubref-subscriber-drops-messages
 
+https://github.com/lagom/lagom/issues/1067
 

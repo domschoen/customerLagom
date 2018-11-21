@@ -3,7 +3,7 @@ package com.nagravision.customer.impl
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.persistence.query.{Offset, PersistenceQuery}
+import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
 import com.nagravision.customer.api
 import com.nagravision.customer.api.{CustomerService, LiveCustomerEventsRequest}
 import com.lightbend.lagom.scaladsl.api.{ServiceCall, ServiceLocator}
@@ -73,38 +73,74 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
     Future.successful(newSource)
   }*/
 
+
+
   override def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
       val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
       Future.successful(topic.subscriber)
     }
   }
 
+  override def currentPersistenceIds(): ServiceCall[NotUsed, Source[String, NotUsed]] = { _ => {
+    //Future.successful(currentIdsQuery.currentPersistenceIds())
+    Future.successful(currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
+      ev => Future(ev.event.toString())))
 
+  }
+  }
 
   override def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = { _ => {
-      val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
-      Future.successful(topic.subscriber)
-    }
+      //currentIdsQuery.eventsByTag(CustomerEvent.Tag,Offset.noOffset)
+      /*val source: Source[EventEnvelope, NotUsed] = currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue)
+      //val sourceMap = source.mapAsync(_.event)
+      //Future.successful(sourceMap)
+      Future.successful(Source.fromGraph(source).mapAsync(1)(ev => Future({
+      val event = ev.event
+      println("event " + event)
+      event.asInstanceOf[api.CustomerEvent]
+
+      }
+      )))*/
+      println("Will query persistence")
+
+      //currentIdsQuery.eventsByTag("CustomerEvent",Offset.noOffset).map(eve => println("Envelope : " + eve))
+      //val currentPersistenceIds = currentIdsQuery.currentPersistenceIds()
+
+      //currentPersistenceIds.runWith(Sink.seq).map{ _.map{_.toString}.mkString("\n")}
+
+      //println("currentPersistenceIds"  + currentPersistenceIds)
+
+
+      /*
+      currentIdsQuery.eventsByPersistenceId("NZZ", 0, Long.MaxValue).map(eve => println("Envelope : " + eve))*/
+      /*val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
+      Future.successful(topic.subscriber)*/
+      //Future.successful(currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
+      //  ev => Future(ev.event.asInstanceOf[api.CustomerEvent])))
+      Future.successful(currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
+        ev => Future(ev.event.asInstanceOf[api.CustomerEvent])))
+
+  }
   }
 
   override def createCustomer = ServiceCall[api.Customer, Done] { customer => {
-      val trigram = customer.trigram match {
-        case Some(trigramValue) => trigramValue
-        case None => createTrigram
-      }
-      val c = Customer(trigram, customer.name, customer.customerType, customer.dynamicsAccountID, customer.headCountry, customer.region)
-
-      println("c " + c)
-      // Ask the entity the Hello command.
-      val reply = entityRef(trigram).ask(CreateCustomer(c))
-      reply.map(ack => {
-        val topic = pubSub.refFor(TopicId[api.CustomerCreated])
-        topic.publish(api.CustomerCreated(trigram, customer.name, customer.customerType, customer.dynamicsAccountID, customer.headCountry, customer.region))
-        Done
-      })
-
+    val trigram = customer.trigram match {
+    case Some(trigramValue) => trigramValue
+    case None => createTrigram
     }
+    val c = Customer(trigram, customer.name, customer.customerType, customer.dynamicsAccountID, customer.headCountry, customer.region)
+
+    println("c " + c)
+    // Ask the entity the Hello command.
+    val reply = entityRef(trigram).ask(CreateCustomer(c))
+    reply.map(ack => {
+    val topic = pubSub.refFor(TopicId[api.CustomerCreated])
+    topic.publish(api.CustomerCreated(trigram, customer.name, customer.customerType, customer.dynamicsAccountID, customer.headCountry, customer.region))
+    Done
+  })
+
   }
+}
 
 
   override def renameCustomer(trigram: String) = ServiceCall { request =>
@@ -127,6 +163,7 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
       case None => throw NotFound("Customer with trigram " + trigram + " not found");
     }
   }
+
   override def getCustomers = ServiceCall { _ =>
     customerRepository.getCustomers.map(customers => customers.map(convertCustomer))
   }
@@ -135,12 +172,12 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
     eventStreamElement match {
       case EventStreamElement(trigram, CustomerCreated(customer), offset) =>
         api.CustomerCreated(customer.trigram,
-            customer.name,
-            customer.customerType,
-            customer.dynamicsAccountID,
-            customer.headCountry,
-            customer.region
-          )
+          customer.name,
+          customer.customerType,
+          customer.dynamicsAccountID,
+          customer.headCountry,
+          customer.region
+        )
 
 
       case EventStreamElement(trigram, CustomerRenamed(newName), offset) =>

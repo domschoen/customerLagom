@@ -36,7 +36,7 @@ object StreamUtils {
       }
       socket.onclose = (e: CloseEvent) => {
         dom.console.log(s"Socket closed. Reason: ${e.reason} (${e.code})")
-        //StreamUtils.createStream()
+        StreamUtils.createNewEventStream()
       }
       socket.onerror = (e: Event) => {
         dom.console.log(s"Socket error! ${e}")
@@ -72,6 +72,13 @@ object StreamUtils {
     s.connect()
     s
   }
+
+  def createNewEventStream():Socket = {
+    val s = Socket("/api/customerNewEventStream")
+    s.connect()
+    s
+  }
+
 
   //def createActivityStream(userId: String)= {
   //  Socket("/api/activity/" + userId + "/live", None)

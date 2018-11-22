@@ -19,8 +19,9 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import diode.Action
 import diode.react.ModelProxy
-import services.{FetchCustomers, MegaContent, UseLocalStorageUser}
+import services.{FetchCustomers, InspectCustomer, MegaContent, UseLocalStorageUser}
 import client.Main.Loc
+import client.Customer
 
 // Translation of App
 object AppPage {
@@ -40,23 +41,65 @@ object AppPage {
       p.proxy.dispatchCB(FetchCustomers)
     }
 
+    def inspectEO(customer: Customer) = {
+      Callback.log(s"Inspect: $customer") >>
+        $.props >>= (_.proxy.dispatchCB(InspectCustomer(customer)))
+    }
 
 
 
     def render(p: Props): VdomElement = {
       println("render | AppPage")
       val allCustomersFetched = p.proxy.value.allCustomers.isDefined
-      <.div(^.className :="loading",
-        <.h1("Customer Repo"),
-        <.h2("Customers:"),
+      <.div(^.className := "container body",
+        <.div(^.className := "grey-to-blue-background",
+          <.h2("CUSTOMER REPOSITORY")
+        ),
         p.proxy.value.allCustomers match {
           case Some(customers) =>
-            <.table(
+            val count = customers.size
+            val entityDisplayName = "Customer"
+            val countText = count match {
+              case x if x == 0 =>
+                "No " + entityDisplayName
+              case x if x > 1 =>
+                entityDisplayName match {
+                  case  "Alias" => count + " " + "Aliases"
+                  case _ => count + " " + entityDisplayName + "s"
+                }
+              case _ => count + " " + entityDisplayName
+            }
+
+            <.table(^.className := "table table-bordered table-hover table-condensed",
+              <.thead(
+                <.tr(
+                  <.th(^.className := "result-details-header", ^.colSpan := 100,
+                    countText,
+                  )
+                )
+              ),
+              <.thead(
+                <.th(),
+                <.th(^.className := "",
+                  <.span(^.className := "", "Prefered Name")
+                ),
+                <.th(^.className := "",
+                  <.span(^.className := "", "Dynamics Account ID")
+                ),
+                <.th(^.className := "",
+                  <.span(^.className := "", "Customer Trigram")
+                )
+              ),
               <.tbody(
                 customers toTagMod (
                   customer => {
                     <.tr(
-                      <.td(customer.trigram),<.td(customer.name)
+                      <.td(^.className := "text-center",
+                        <.i(^.className := "glyphicon glyphicon-search", ^.title := "inspect", ^.onClick --> inspectEO(customer)),
+                      ),
+                      <.td(customer.name),
+                      <.td(customer.dynamicsAccountID),
+                      <.td(customer.trigram)
                     )
                   }
                 )
@@ -78,6 +121,7 @@ object AppPage {
       )
 
       )
+
     }
   }
   // create the React component for Dashboard

@@ -49,6 +49,9 @@ trait CustomerService extends Service {
   def getCustomers: ServiceCall[NotUsed, Seq[Customer]]
 
   def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
+  def getLiveCustomerNewEvents(): ServiceCall[NotUsed, Source[CustomerEvent, NotUsed]]
+
+
   def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[CustomerEvent, NotUsed]]
   //def currentPersistenceIds(): ServiceCall[NotUsed, Source[String, NotUsed]]
   def currentPersistenceIds(): ServiceCall[NotUsed, Source[String, NotUsed]]
@@ -66,6 +69,8 @@ trait CustomerService extends Service {
 
         //pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
         pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
+        pathCall("/api/customerNewEventStream", getLiveCustomerNewEvents),
+
         pathCall("/api/customerEventStream/customer", getLiveCustomerEvents _),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
       )

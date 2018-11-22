@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
 import com.nagravision.customer.api
-import com.nagravision.customer.api.{CustomerService, LiveCustomerEventsRequest}
+import com.nagravision.customer.api.{CustomerEvent, CustomerService, LiveCustomerEventsRequest}
 import com.lightbend.lagom.scaladsl.api.{ServiceCall, ServiceLocator}
 import com.lightbend.lagom.scaladsl.api.broker.Topic
 import com.lightbend.lagom.scaladsl.broker.TopicProducer
@@ -88,6 +88,15 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
 
   }
   }
+
+  def getLiveCustomerNewEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = { _ => {
+    val topicCustomerRenamed = pubSub.refFor(TopicId[api.CustomerRenamed])
+    val liveCustomerRenamedSource = topicCustomerRenamed.subscriber
+
+    Future.successful(liveCustomerRenamedSource)
+  }
+  }
+
 
   override def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = { _ => {
     val topicCustomerRenamed = pubSub.refFor(TopicId[api.CustomerRenamed])

@@ -23,6 +23,7 @@ case object Logout extends Action
 case object FetchCustomers extends Action
 
 
+case class InspectCustomer(customer: Customer) extends Action
 
 // The base model of our application
 case class UserLogin(loginChecked: Boolean = false)

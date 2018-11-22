@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
 import akka.persistence.serialization.MessageSerializer
 import akka.stream.Materializer
-import akka.stream.javadsl.Keep
+import akka.stream.javadsl.{Concat, Keep}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.lightbend.lagom.internal.broker.kafka.NoKafkaBrokersException
 //import com.lightbend.lagom.scaladsl.api.broker.Topic.TopicId
@@ -90,36 +90,22 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
   }
 
   override def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = { _ => {
-      //currentIdsQuery.eventsByTag(CustomerEvent.Tag,Offset.noOffset)
-      /*val source: Source[EventEnvelope, NotUsed] = currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue)
-      //val sourceMap = source.mapAsync(_.event)
-      //Future.successful(sourceMap)
-      Future.successful(Source.fromGraph(source).mapAsync(1)(ev => Future({
-      val event = ev.event
-      println("event " + event)
-      event.asInstanceOf[api.CustomerEvent]
+    val topicCustomerRenamed = pubSub.refFor(TopicId[api.CustomerRenamed])
+    val liveCustomerRenamedSource = topicCustomerRenamed.subscriber
+
+    val topicCostomerCreated = pubSub.refFor(TopicId[api.CustomerCreated])
+    val liveCustomerCreatedSource = topicCostomerCreated.subscriber
+
+    val historicalEventSource = currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
+      ev => Future({
+        val event = ev.event
+        println("ev " + event.getClass.getName)
+        convertImplEventToApiEvent("NZZ", event.asInstanceOf[CustomerEvent])
 
       }
-      )))*/
-      println("Will query persistence")
-
-      //currentIdsQuery.eventsByTag("CustomerEvent",Offset.noOffset).map(eve => println("Envelope : " + eve))
-      //val currentPersistenceIds = currentIdsQuery.currentPersistenceIds()
-
-      //currentPersistenceIds.runWith(Sink.seq).map{ _.map{_.toString}.mkString("\n")}
-
-      //println("currentPersistenceIds"  + currentPersistenceIds)
-
-
-      /*
-      currentIdsQuery.eventsByPersistenceId("NZZ", 0, Long.MaxValue).map(eve => println("Envelope : " + eve))*/
-      /*val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
-      Future.successful(topic.subscriber)*/
-      //Future.successful(currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
-      //  ev => Future(ev.event.asInstanceOf[api.CustomerEvent])))
-      Future.successful(currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
-        ev => Future(ev.event.asInstanceOf[api.CustomerEvent])))
-
+      ))
+    val combinedSource = historicalEventSource.concat(liveCustomerCreatedSource)
+    Future.successful(combinedSource)
   }
   }
 
@@ -167,6 +153,24 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
   override def getCustomers = ServiceCall { _ =>
     customerRepository.getCustomers.map(customers => customers.map(convertCustomer))
   }
+
+  private def convertImplEventToApiEvent(trigram: String, event: CustomerEvent) : api.CustomerEvent = {
+    event match {
+      case CustomerCreated(customer) =>
+        api.CustomerCreated(customer.trigram,
+          customer.name,
+          customer.customerType,
+          customer.dynamicsAccountID,
+          customer.headCountry,
+          customer.region
+        )
+
+
+      case CustomerRenamed(newName) =>
+        api.CustomerRenamed(trigram, newName)
+    }
+  }
+
 
   private def convertToApiCustomerEvent(eventStreamElement: EventStreamElement[CustomerEvent]): api.CustomerEvent = {
     eventStreamElement match {

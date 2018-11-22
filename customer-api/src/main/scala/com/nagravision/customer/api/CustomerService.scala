@@ -65,7 +65,7 @@ trait CustomerService extends Service {
         pathCall("/api/customer", getCustomers),
 
         //pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
-        pathCall("/api/customerEventStream", currentPersistenceIds),
+        pathCall("/api/customerEventStream", getLiveAllCustomerEvents),
         pathCall("/api/customerEventStream/customer", getLiveCustomerEvents _),
         pathCall("/api/customer/:trigram/rename", renameCustomer _)
       )

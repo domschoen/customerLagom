@@ -108,19 +108,25 @@ object AppPage {
             )
         case None => <.div("No customers")
       },
-      //<.h1("Customer: " + customer.get.name).when(customer.isDefined),
-      <.h2("Action Events:"), //.when(customer.isDefined),
-      <.table(
-        <.tbody(
-          p.proxy.value.customerEvents toTagMod (
-            customerEvent => {
-              <.tr(
-                <.td(customerEvent.toString)
+        customer match {
+          case Some(cust) =>
+            <.div(
+              <.h1("Customer: " + customer.get.name).when(customer.isDefined),
+              <.h2("Action Events:"), //.when(customer.isDefined),
+              <.table(
+                <.tbody(
+                  p.proxy.value.customerEvents toTagMod (
+                    customerEvent => {
+                      <.tr(
+                        <.td(customerEvent.toString)
+                      )
+                    }
+                  )
+                )
               )
-            }
             )
-        )
-      ) //.when(customer.isDefined)
+          case _ => <.div()
+        }
 
       )
 

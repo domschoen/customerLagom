@@ -17,7 +17,7 @@ import client.CustomerEvent.{CustomerRenamed, CustomerCreated}
 case object UseLocalStorageUser extends Action
 case class LoginWithID(userId: String) extends Action
 case class RegisterCustomers(customers: Option[List[Customer]]) extends Action
-case object InitApp extends Action
+case class SetCustomer(customer: Customer) extends Action
 
 case object Logout extends Action
 case object FetchCustomers extends Action
@@ -37,12 +37,6 @@ case class RootModel(content: MegaContent)
   */
 class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(modelRW) {
   override def handle = {
-    case InitApp =>
-      println("UsersHandler | InitApp | ")
-      StreamUtils.createStream()
-      noChange
-
-
     case UseLocalStorageUser =>
       noChange
 
@@ -69,13 +63,16 @@ class AllCustomersHandler[M](modelRW: ModelRW[M, Option[List[Customer]]]) extend
 class CustomerHandler[M](modelRW: ModelRW[M, Option[Customer]]) extends ActionHandler(modelRW) {
   override def handle = {
     case InspectCustomer(customer: Customer) =>
-      updated(Some(customer))
-
+      updated(Some(customer),Effect.action(SetCustomer(customer)))
   }
 }
 
 class CustomerEventHandler[M](modelRW: ModelRW[M, List[CustomerEvent]]) extends ActionHandler(modelRW) {
   override def handle = {
+    case SetCustomer(customer) =>
+      StreamUtils.createStream(customer.trigram)
+      updated(List())
+
     case CustomerCreated(
       trigram: String,
       name: String,

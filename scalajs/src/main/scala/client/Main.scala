@@ -9,7 +9,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import components.AppPage
 import com.zoepepper.facades.jsjoda._
-import services.{InitApp, MegaContent, SPACircuit, UseLocalStorageUser}
+import services.{MegaContent, SPACircuit, UseLocalStorageUser}
 import diode.Action
 import diode.react.ModelProxy
 import components.AppPage
@@ -45,7 +45,6 @@ object Main {
   def main(args: Array[String]): Unit = {
     val router = Router(BaseUrl.until_#, routerConfig)
 
-    SPACircuit.dispatch(InitApp)
 
     router().renderIntoDOM(dom.document.getElementById("root"))
   }

@@ -21,6 +21,10 @@ object Customer{
   implicit def rw: RW[Customer] = macroRW
 }
 
+case class StreamForCustomer(trigram: String)
+object StreamForCustomer{
+  implicit def rw: RW[StreamForCustomer] = macroRW
+}
 
 sealed trait CustomerEvent extends Action
 object CustomerEvent {

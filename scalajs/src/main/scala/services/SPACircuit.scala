@@ -27,7 +27,7 @@ case class InspectCustomer(customer: Customer) extends Action
 
 // The base model of our application
 case class UserLogin(loginChecked: Boolean = false)
-case class MegaContent(userLogin: UserLogin, allCustomers: Option[List[Customer]], customerEvents: List[CustomerEvent])
+case class MegaContent(userLogin: UserLogin, customer: Option[Customer], allCustomers: Option[List[Customer]], customerEvents: List[CustomerEvent])
 case class RootModel(content: MegaContent)
 
 /**
@@ -65,6 +65,15 @@ class AllCustomersHandler[M](modelRW: ModelRW[M, Option[List[Customer]]]) extend
   }
   }
 
+
+class CustomerHandler[M](modelRW: ModelRW[M, Option[Customer]]) extends ActionHandler(modelRW) {
+  override def handle = {
+    case InspectCustomer(customer: Customer) =>
+      updated(Some(customer))
+
+  }
+}
+
 class CustomerEventHandler[M](modelRW: ModelRW[M, List[CustomerEvent]]) extends ActionHandler(modelRW) {
   override def handle = {
     case CustomerCreated(
@@ -89,11 +98,12 @@ class CustomerEventHandler[M](modelRW: ModelRW[M, List[CustomerEvent]]) extends 
 // Application circuit
 object SPACircuit extends Circuit[RootModel] with ReactConnector[RootModel] {
   // initial application model
-  override protected def initialModel = RootModel(MegaContent(UserLogin(false), None, List()))
+  override protected def initialModel = RootModel(MegaContent(UserLogin(false), None, None, List()))
   // combine all handlers into one
   override protected val actionHandler = composeHandlers(
     new UserLoginHandler(zoomTo(_.content.userLogin)),
     new AllCustomersHandler(zoomTo(_.content.allCustomers)),
+    new CustomerHandler(zoomTo(_.content.customer)),
     new CustomerEventHandler(zoomTo(_.content.customerEvents))
   )
 }

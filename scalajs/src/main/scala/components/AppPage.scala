@@ -51,6 +51,7 @@ object AppPage {
     def render(p: Props): VdomElement = {
       println("render | AppPage")
       val allCustomersFetched = p.proxy.value.allCustomers.isDefined
+      val customer = p.proxy.value.customer
       <.div(^.className := "container body",
         <.div(^.className := "grey-to-blue-background",
           <.h2("CUSTOMER REPOSITORY")
@@ -107,7 +108,8 @@ object AppPage {
             )
         case None => <.div("No customers")
       },
-      <.h2("Action Events:"),
+      //<.h1("Customer: " + customer.get.name).when(customer.isDefined),
+      <.h2("Action Events:"), //.when(customer.isDefined),
       <.table(
         <.tbody(
           p.proxy.value.customerEvents toTagMod (
@@ -118,7 +120,7 @@ object AppPage {
             }
             )
         )
-      )
+      ) //.when(customer.isDefined)
 
       )
 

@@ -17,17 +17,21 @@ import client.CustomerEvent.{CustomerRenamed, CustomerCreated}
 case object UseLocalStorageUser extends Action
 case class LoginWithID(userId: String) extends Action
 case class RegisterCustomers(customers: Option[List[Customer]]) extends Action
-case class SetCustomer(customer: Customer) extends Action
+case object InitApp extends Action
 
 case object Logout extends Action
 case object FetchCustomers extends Action
 
+case object SearchWithBusyIndicator extends Action
+case object AddCustomer extends Action
+case object CustomerHasBeenCreated extends Action
 
 case class InspectCustomer(customer: Customer) extends Action
 
 // The base model of our application
 case class UserLogin(loginChecked: Boolean = false)
-case class MegaContent(userLogin: UserLogin, customer: Option[Customer], allCustomers: Option[List[Customer]], customerEvents: List[CustomerEvent])
+case class CustomerManagement(addCustomer: Boolean, customer: Option[Customer])
+case class MegaContent(userLogin: UserLogin, customer: CustomerManagement, allCustomers: Option[List[Customer]], customerEvents: List[CustomerEvent])
 case class RootModel(content: MegaContent)
 
 /**
@@ -37,6 +41,12 @@ case class RootModel(content: MegaContent)
   */
 class UserLoginHandler[M](modelRW: ModelRW[M, UserLogin]) extends ActionHandler(modelRW) {
   override def handle = {
+    case InitApp =>
+      println("UsersHandler | InitApp | ")
+      StreamUtils.createStream()
+      noChange
+
+
     case UseLocalStorageUser =>
       noChange
 
@@ -60,19 +70,18 @@ class AllCustomersHandler[M](modelRW: ModelRW[M, Option[List[Customer]]]) extend
   }
 
 
-class CustomerHandler[M](modelRW: ModelRW[M, Option[Customer]]) extends ActionHandler(modelRW) {
+class CustomerHandler[M](modelRW: ModelRW[M, CustomerManagement]) extends ActionHandler(modelRW) {
   override def handle = {
     case InspectCustomer(customer: Customer) =>
-      updated(Some(customer),Effect.action(SetCustomer(customer)))
+      updated(CustomerManagement(false, Some(customer)))
+    case AddCustomer =>
+      updated(CustomerManagement(true, None))
+
   }
 }
 
 class CustomerEventHandler[M](modelRW: ModelRW[M, List[CustomerEvent]]) extends ActionHandler(modelRW) {
   override def handle = {
-    case SetCustomer(customer) =>
-      StreamUtils.createStream(customer.trigram)
-      updated(List())
-
     case CustomerCreated(
       trigram: String,
       name: String,
@@ -95,7 +104,7 @@ class CustomerEventHandler[M](modelRW: ModelRW[M, List[CustomerEvent]]) extends 
 // Application circuit
 object SPACircuit extends Circuit[RootModel] with ReactConnector[RootModel] {
   // initial application model
-  override protected def initialModel = RootModel(MegaContent(UserLogin(false), None, None, List()))
+  override protected def initialModel = RootModel(MegaContent(UserLogin(false), CustomerManagement(false, None),  None, List()))
   // combine all handlers into one
   override protected val actionHandler = composeHandlers(
     new UserLoginHandler(zoomTo(_.content.userLogin)),

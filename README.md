@@ -248,6 +248,49 @@ https://stackoverflow.com/questions/41377449/how-to-retrieve-all-journal-events-
 
 
 
+https://stackoverflow.com/questions/38246786/akka-persistence-query-event-stream-and-cqrs
 
+## LessKeys.compress not found: value LessKeys
+
+sbt-less plugin was missing in plugins.sbt
+
+
+## java.lang.NoClassDefFoundError: japgolly/scalajs/react/internal/ReactMacroUtils
+
+add to jvmDependencies:
+"com.github.japgolly.scalacss" %%% "core" % "0.5.3" 
+
+Change in scala.js project in the libraryDepencies:
+from 
+    "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
+
+to
+        "com.github.japgolly.scalacss" %%% "core" % "0.5.3",
+
+
+## (5) Referring to non-existent method japgolly.scalajs.react.component.builder.Lifecycle$ComponentDidMount.<init>
+
+=> remove the extends js.JSApp
+=> not enough
+=> 
+
+## No main module initializer was specified (possibly because no or multiple main classes were found), but scalaJSUseMainModuleInitializer was set to true. You can explicitly specify it either with `mainClass := Some(...)` or with `scalaJSMainModuleInitializer := Some(...)`
+
+change 
+  def main(): Unit = {
+to 
+  def main(args: Array[String]): Unit = {
+
+=> solved but still facing problem 5
+
+
+## play.api.Configuration$$anon$1: Configuration error[application: application.conf: java.io.IOException: resource not found on classpath: application.conf, application.json: java.io.IOException: resource not found on classpath: application.json, application.properties: java.io.IOException: resource not found on classpath: application.properties]
+
+???
+- remove   val router = Router(baseUrl, config) ??
+- change SPAMain to Main
+- 
+ 
+## Extensions.scala:333 POST http://localhost:9000/api/d2spa/shared/Api/getMetaData 403 (Forbidden)
 
 

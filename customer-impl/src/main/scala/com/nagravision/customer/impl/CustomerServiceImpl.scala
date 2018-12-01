@@ -75,6 +75,11 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
 
 
 
+  override def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
+      val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
+      Future.successful(topic.subscriber)
+    }
+  }
 
   override def currentPersistenceIds(): ServiceCall[NotUsed, Source[String, NotUsed]] = { _ => {
     //Future.successful(currentIdsQuery.currentPersistenceIds())
@@ -93,18 +98,18 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
   }
 
 
-  override def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
+  override def getLiveAllCustomerEvents(): ServiceCall[NotUsed, Source[api.CustomerEvent, NotUsed]] = { _ => {
     val topicCustomerRenamed = pubSub.refFor(TopicId[api.CustomerRenamed])
     val liveCustomerRenamedSource = topicCustomerRenamed.subscriber
 
     val topicCostomerCreated = pubSub.refFor(TopicId[api.CustomerCreated])
     val liveCustomerCreatedSource = topicCostomerCreated.subscriber
 
-    val persistenceId = "CustomerEntity|" + req.trigram
-    val historicalEventSource = currentIdsQuery.eventsByPersistenceId(persistenceId, 0, Long.MaxValue).mapAsync(1)(
+    val historicalEventSource = currentIdsQuery.eventsByPersistenceId("CustomerEntity|NZZ", 0, Long.MaxValue).mapAsync(1)(
       ev => Future({
         val event = ev.event
-        convertImplEventToApiEvent(req.trigram, event.asInstanceOf[CustomerEvent])
+        println("ev " + event.getClass.getName)
+        convertImplEventToApiEvent("NZZ", event.asInstanceOf[CustomerEvent])
 
       }
       ))

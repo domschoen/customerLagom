@@ -19,7 +19,7 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.html_<^._
 import diode.Action
 import diode.react.ModelProxy
-import services.{FetchCustomers, InspectCustomer, MegaContent, UseLocalStorageUser}
+import services._
 import client.Main.Loc
 import client.Customer
 
@@ -46,7 +46,15 @@ object AppPage {
         $.props >>= (_.proxy.dispatchCB(InspectCustomer(customer)))
     }
 
+    def search(router: RouterCtl[Loc],entityName: String) = {
+      Callback.log(s"Search: $entityName") >>
+        $.props >>= (_.proxy.dispatchCB(SearchWithBusyIndicator))
+    }
 
+    def addCustomer(router: RouterCtl[Loc],entityName: String) = {
+      Callback.log(s"Search: $entityName") >>
+        $.props >>= (_.proxy.dispatchCB(AddCustomer))
+    }
 
     def render(p: Props): VdomElement = {
       println("render | AppPage")
@@ -56,6 +64,23 @@ object AppPage {
         <.div(^.className := "grey-to-blue-background",
           <.h2("CUSTOMER REPOSITORY")
         ),
+        <.div(^.className := "search-container grey-to-blue-background",
+          <.div(^.className := "form-horizontal",
+            <.div(^.className := "form-group",
+              <.label(^.className := "control-label col-xs-2","NAME"),
+              <.div(^.className := "col-sm-2",
+                "QueryOp"
+              ),
+              <.label(^.className := "control-label col-xs-2","TRIGRAM"),
+              <.div(^.className := "col-sm-2",
+                "Query trigram"
+              ),
+              <.button(^.className := "btn btn-primary col-sm-1", ^.onClick --> search(p.ctl, "Customer"),"SEARCH"),
+              <.button(^.className := "btn btn-primary col-sm-1", ^.onClick --> addCustomer(p.ctl, "Customer"),"ADD")
+            )
+          )
+        ),
+
         p.proxy.value.allCustomers match {
           case Some(customers) =>
             val count = customers.size
@@ -108,25 +133,8 @@ object AppPage {
             )
         case None => <.div("No customers")
       },
-        customer match {
-          case Some(cust) =>
-            <.div(
-              <.h1("Customer: " + customer.get.name).when(customer.isDefined),
-              <.h2("Action Events:"), //.when(customer.isDefined),
-              <.table(
-                <.tbody(
-                  p.proxy.value.customerEvents toTagMod (
-                    customerEvent => {
-                      <.tr(
-                        <.td(customerEvent.toString)
-                      )
-                    }
-                  )
-                )
-              )
-            )
-          case _ => <.div()
-        }
+        NewCustomer(p.ctl,p.proxy),
+        ShowCustomer(p.ctl,p.proxy)
 
       )
 

@@ -75,9 +75,22 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
 
 
 
-  override def getLiveCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
-      val topic = pubSub.refFor(TopicId[api.CustomerRenamed])
-      Future.successful(topic.subscriber)
+  override def getHistoricalCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
+    val topicCustomerRenamed = pubSub.refFor(TopicId[api.CustomerRenamed])
+    val liveCustomerRenamedSource = topicCustomerRenamed.subscriber
+
+    println("Stream for "+ req.trigram)
+    val historicalEventSource = currentIdsQuery.eventsByPersistenceId("CustomerEntity|" + req.trigram, 0, Long.MaxValue).mapAsync(1)(
+      ev => Future({
+        val event = ev.event
+        println("ev " + event.getClass.getName)
+        convertImplEventToApiEvent(req.trigram, event.asInstanceOf[CustomerEvent])
+
+      }
+      ))
+    val combinedSource = historicalEventSource.concat(liveCustomerRenamedSource)
+    Future.successful(combinedSource)
+    //Future.successful(historicalEventSource)
     }
   }
 

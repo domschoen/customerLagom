@@ -22,28 +22,73 @@ import diode.react.ModelProxy
 import services._
 import client.Main.Loc
 import client.Customer
+import components.NewCustomer.State
+import upickle.default.{write, macroRW, ReadWriter => RW}
 
-// Translation of App
+
+
+
+case class CustomerNewName(name: String)
+
+object CustomerNewName{
+  implicit def rw: RW[CustomerNewName] = macroRW
+}
+
+
+
 object ShowCustomer {
 
-  case class Props(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent])
+  case class Props(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent], customer: Customer)
+  case class State(name: Option[String], error: Option[String])
 
 
-  protected class Backend($: BackendScope[Props, Unit]) {
+  protected class Backend($: BackendScope[Props, State]) {
 
-    def render(p: Props): VdomElement = {
-      println("render | AppPage")
-      val customerOpt = p.proxy.value.customer.customer
-      val show = customerOpt.isDefined
 
-      if (show) {
-        val customer = customerOpt.get
+    def handleSubmit(p: Props, s: State, e: ReactEventFromInput, customer: Customer): Callback = {
+      e.preventDefaultCB >> {
+        val customerNewName = CustomerNewName(s.name.get)
+        val request = Ajax.post(
+          url = "/api/customer/" + customer.trigram + "/rename",
+          data = write(customerNewName)
+        ).recover {
+          // Recover from a failed error code into a successful future
+          case dom.ext.AjaxException(req) => req
+        }.map(r =>
+          r.status match {
+            case 200 =>
+              Callback.empty
+
+            case _ =>
+              val errorMsg = "Customer already exist."
+              println(errorMsg)
+              $.modState(_.copy(error = Some(errorMsg)))
+          }
+        )
+        Callback.future(request)
+      }
+    }
+    def handleNameChange(e: ReactEventFromInput) = {
+      val newName = if (e.target.value == null) None else Some(e.target.value)
+      $.modState(_.copy(name = newName))
+    }
+
+    def render(p: Props, s: State): VdomElement = {
+      //println("render | AppPage")
+        val customer = p.customer
+        val nameString = if (s.name.isDefined) s.name.get else ""
         <.div(
-          <.table(
-            <.tbody(
-              <.tr(
-                <.th("NAME"),
-                <.td(customer.name)
+          <.form(^.className := "signupForm", ^.onSubmit ==> { e: ReactEventFromInput => handleSubmit(p, s, e, customer)},
+
+
+            <.table(
+              <.tbody(
+                <.tr(
+                  <.th("NAME"),
+                  <.td(<.input.text(^.placeholder := "Name...", ^.value := nameString,
+                    ^.onChange ==> { e: ReactEventFromInput => handleNameChange(e)})),
+                  <.td(<.input.submit(^.value := "Rename"))
+                )
               )
             )
           ),
@@ -61,18 +106,24 @@ object ShowCustomer {
           ) //.when(customer.isDefined)
 
         )
-      } else {
-        <.div()
-      }
     }
   }
+
+  def initName(customerOpt: Option[Customer]) = {
+    println("initName() customerOpt " + customerOpt)
+    customerOpt match {
+      case Some(customer) => Some(customer.name)
+      case None => None
+    }
+  }
+
   // create the React component for Dashboard
   private val component = ScalaComponent.builder[Props]("AppPage")
+    .initialStateFromProps(p => State(initName(p.proxy.value.customer.customer), None))
     .renderBackend[Backend]
     .build
 
-  def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent]) = {
-    println("AppPage | apply")
-    component(Props(ctl, proxy))
+  def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent], customer: Customer) = {
+    component(Props(ctl, proxy, customer))
   }
 }

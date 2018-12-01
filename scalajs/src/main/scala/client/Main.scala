@@ -45,7 +45,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     val router = Router(BaseUrl.until_#, routerConfig)
 
-    SPACircuit.dispatch(InitApp)
+    //SPACircuit.dispatch(InitApp)
 
     router().renderIntoDOM(dom.document.getElementById("root"))
   }

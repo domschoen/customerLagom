@@ -19,11 +19,18 @@ import client.CustomerEvent.{CustomerRenamed, CustomerCreated}
 import diode.Action
 import diode.react.ModelProxy
 
+
+case class StreamForCustomer(trigram: String)
+object StreamForCustomer{
+  implicit def rw: RW[StreamForCustomer] = macroRW
+}
+
+
 object StreamUtils {
   val baseWebsocketUrl = s"ws://${dom.document.location.host}"
 
 
-  case class Socket(url: String) {
+  case class Socket(url: String, trigramOpt: Option[String]) {
     private val socket: WebSocket = new dom.WebSocket(url = baseWebsocketUrl + url)
 
     def close() = {
@@ -33,6 +40,13 @@ object StreamUtils {
     def connect() {
       socket.onopen = (e: Event) => {
         dom.console.log(s"Socket opened. Reason:")
+        trigramOpt match {
+          case Some(trigram) =>
+            val msg = write(StreamForCustomer(trigram))
+            socket.send(msg)
+          case None => ()
+        }
+
       }
       socket.onclose = (e: CloseEvent) => {
         dom.console.log(s"Socket closed. Reason: ${e.reason} (${e.code})")
@@ -46,7 +60,7 @@ object StreamUtils {
       }*/
 
       socket.onmessage = (e: MessageEvent) => {
-        println("e.data " + e.data.toString)
+        //println("e.data " + e.data.toString)
 
         val eventType = read[CustomerEventType](e.data.toString)
         val sealedClass = eventType.event_type match {
@@ -56,9 +70,9 @@ object StreamUtils {
         val sealedType = """"$type":"""" + sealedClass + """","""
         val stringReceived = "{" +sealedType +  e.data.toString.substring(1)
 
-        println("Socket received completed " + stringReceived)
+        //println("Socket received completed " + stringReceived)
         val action = read[CustomerEvent](stringReceived)
-        println("Socket received event " + action)
+        //println("Socket received event " + action)
 
         SPACircuit.dispatch(action)
       }
@@ -66,23 +80,27 @@ object StreamUtils {
   }
 
 
-
+  // historical events + new events
   def createStream():Socket = {
-    val s = Socket("/api/customerEventStream")
+    val s = Socket("/api/customerEventStream", None)
     s.connect()
     s
   }
 
+  // If we have to reconnect, we are interested only in new events
+  // New events
   def createNewEventStream():Socket = {
-    val s = Socket("/api/customerNewEventStream")
+    val s = Socket("/api/customerNewEventStream", None)
     s.connect()
     s
   }
 
 
-  //def createActivityStream(userId: String)= {
-  //  Socket("/api/activity/" + userId + "/live", None)
-  // }
+  def createActivityStream(trigram: String)= {
+    val s = Socket("/api/customerEventStream/customer", Some(trigram))
+    s.connect()
+    s
+  }
 
 
 }

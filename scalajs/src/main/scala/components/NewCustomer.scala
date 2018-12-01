@@ -83,7 +83,7 @@ object NewCustomer {
     }
 
     def render(p: Props, s: State): VdomElement = {
-      println("render | AppPage")
+      //println("render | AppPage")
       val show = p.proxy.value.customer.addCustomer
 
       if (show) {
@@ -125,7 +125,6 @@ object NewCustomer {
     .build
 
   def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent]) = {
-    println("AppPage | apply")
     component(Props(ctl, proxy))
   }
 }

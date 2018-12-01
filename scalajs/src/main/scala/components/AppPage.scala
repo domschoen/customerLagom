@@ -57,10 +57,14 @@ object AppPage {
     }
 
     def render(p: Props): VdomElement = {
-      println("render | AppPage")
+      //println("render | AppPage")
       val allCustomersFetched = p.proxy.value.allCustomers.isDefined
       val customer = p.proxy.value.customer
-      <.div(^.className := "container body",
+      val customerOpt = p.proxy.value.customer.customer
+      val show = customerOpt.isDefined
+
+
+        <.div(^.className := "container body",
         <.div(^.className := "grey-to-blue-background",
           <.h2("CUSTOMER REPOSITORY")
         ),
@@ -134,7 +138,9 @@ object AppPage {
         case None => <.div("No customers")
       },
         NewCustomer(p.ctl,p.proxy),
-        ShowCustomer(p.ctl,p.proxy)
+          if (show) {
+            ShowCustomer(p.ctl, p.proxy,customerOpt.get)
+          } else <.div()
 
       )
 
@@ -148,7 +154,7 @@ object AppPage {
     .build
 
   def apply(ctl: RouterCtl[Loc], proxy: ModelProxy[MegaContent], userId: Option[String], showAddFriends: Boolean) = {
-    println("AppPage | apply")
+    //println("AppPage | apply")
     component(Props(ctl, proxy, userId, showAddFriends))
   }
 }

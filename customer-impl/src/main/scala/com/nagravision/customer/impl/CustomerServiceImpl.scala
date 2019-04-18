@@ -75,6 +75,9 @@ class CustomerServiceImpl(registry: PersistentEntityRegistry,   pubSub: PubSubRe
 
 
 
+  // Combine 2 sources of events:
+  // For newly created events : Register to PubSub for Customer Renamed event
+  // For old events: Register to persistence
   override def getHistoricalCustomerEvents(): ServiceCall[LiveCustomerEventsRequest, Source[api.CustomerEvent, NotUsed]] = { req => {
     val topicCustomerRenamed = pubSub.refFor(TopicId[api.CustomerRenamed])
     val liveCustomerRenamedSource = topicCustomerRenamed.subscriber
